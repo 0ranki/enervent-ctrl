@@ -89,16 +89,18 @@ class Coils():
     ]
 
     def __init__(self, serialdevice='/dev/ttyS0', modbusaddr=1, debug=False):
-        if debug: self.coillogger.debug("Updating values from device")
         self.pingvin = minimalmodbus.Instrument(serialdevice, modbusaddr)
+        if debug: self.coillogger.debug("Updating coil values from device")
         self.update(debug)
 
     def update(self, debug=False):
         self.pingvin.serial.timeout = 0.2
         self.pingvin.debug = debug
-        curvalues = self.pingvin.read_bits(0,71,1)
+        if debug: self.coillogger.info(f"{len(self.coils)} coils registered")
+        curvalues = self.pingvin.read_bits(0,len(self.coils),1)
         for i, coil in enumerate(self.coils):
             self.coils[i].value = curvalues[i]
+        self.coillogger.info("Coil values read succesfully")
 
     def fetchValue(self, address, debug=False):
         self.pingvin.debug = debug
