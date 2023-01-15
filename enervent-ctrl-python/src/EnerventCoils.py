@@ -83,6 +83,9 @@ class PingvinCoils():
     ]
 
     def __init__(self, serialdevice='/dev/ttyS0', modbusaddr=1, debug=False):
+        self.update_coils(serialdevice, modbusaddr, debug)
+
+    def update_coils(self, serialdevice='/dev/ttyS0', modbusaddr=1, debug=False):
         self.pingvin = minimalmodbus.Instrument(serialdevice, modbusaddr)
         self.pingvin.serial.timeout = 0.2
         self.pingvin.debug = debug
