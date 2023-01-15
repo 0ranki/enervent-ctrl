@@ -1,5 +1,6 @@
 import minimalmodbus
 import logging
+from flask import jsonify
 
 class EnerventCoil():
     """Single coil data structure"""
@@ -115,14 +116,27 @@ class Coils():
         return self.value(address, debug)
 
     def value(self, address, debug=False):
-        """Return local coil value"""
+        """Get single local coil value"""
         if debug: self.coillogger.debug("Reading coil value from cache")
         return self.coils[address].value
 
     def print(self, debug=False):
         """Human-readable print of all coil values"""
+        coilvals = ""
         for i, coil in enumerate(self.coils):
-            print(f"Coil {i}\t{coil.value} [{coil.symbol}] ({coil.description})")
+            coilvals = coilvals + f"Coil {i}\t{coil.value} [{coil.symbol}] ({coil.description})\n"
+        return coilvals
+
+    def serialize(self):
+        """Returns coil values as parseable Python object"""
+        coilvals = []
+        for coil in self.coils:
+            coilvals.append({"value": coil.value, "symbol": coil.symbol, "description": coil.description, "reserved": coil.reserved})
+        return coilvals
+
+    def get(self, live=False):
+        """Return all coil values in JSON format"""
+        return jsonify(self.serialize())
 
 class PingvinKL():
     """Class for communicating with an Enervent Pinvin Kotilämpö ventilation/heating unit"""
