@@ -1,4 +1,5 @@
 import minimalmodbus
+import logging
 
 class EnerventCoil():
     def __init__(self, symbol="reserved", description="reserved"):
@@ -7,6 +8,12 @@ class EnerventCoil():
         self.description = description
         self.reserved = symbol == "reserved" and description == "reserved"
 class Coils():
+    coillogger = logging.getLogger(__name__)
+    logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s %(message)s',
+    datefmt='%y/%m/%d %H:%M:%S'
+    )
     coils = [
         EnerventCoil("COIL_STOP", "Stop"),
         EnerventCoil("COIL_AWAY", "Away mode"),
@@ -82,15 +89,25 @@ class Coils():
     ]
 
     def __init__(self, serialdevice='/dev/ttyS0', modbusaddr=1, debug=False):
-        self.update_coils(serialdevice, modbusaddr, debug)
-
-    def update_coils(self, serialdevice='/dev/ttyS0', modbusaddr=1, debug=False):
+        if debug: self.coillogger.debug("Updating values from device")
         self.pingvin = minimalmodbus.Instrument(serialdevice, modbusaddr)
+        self.update(debug)
+
+    def update(self, debug=False):
         self.pingvin.serial.timeout = 0.2
         self.pingvin.debug = debug
         curvalues = self.pingvin.read_bits(0,71,1)
         for i, coil in enumerate(self.coils):
             self.coils[i].value = curvalues[i]
+
+    def value(self, address, debug=False):
+        self.pingvin.debug = debug
+        if debug: self.coillogger.debug("Reading coil value from device")
+        return self.pingvin.read_bit(address, 1)
+
+    def updateValue(self, address, debug=False):
+        if debug: self.coillogger.debug("Reading coil value from cache")
+        return self.coils[address].value
 
 class PingvinKL():
     def __init__(self, serialdevice='/dev/ttyS0', modbusaddr=1, debug=False):
