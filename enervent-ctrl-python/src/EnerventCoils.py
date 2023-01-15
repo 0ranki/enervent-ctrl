@@ -1,12 +1,11 @@
 import minimalmodbus
 
 class EnerventCoil():
-    def __init__(self, symbol="", description="", reserved=True):
+    def __init__(self, symbol="reserved", description="reserved"):
         self.symbol = symbol
         self.value = 0
         self.description = description
-        self.reserved = reserved
-
+        self.reserved = symbol == "reserved" and description == "reserved"
 class PingvinCoils():
     coils = [
         EnerventCoil("COIL_STOP", "Stop"),
