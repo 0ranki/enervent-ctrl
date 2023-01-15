@@ -6,7 +6,7 @@ class EnerventCoil():
         self.value = 0
         self.description = description
         self.reserved = symbol == "reserved" and description == "reserved"
-class PingvinCoils():
+class Coils():
     coils = [
         EnerventCoil("COIL_STOP", "Stop"),
         EnerventCoil("COIL_AWAY", "Away mode"),
@@ -92,3 +92,6 @@ class PingvinCoils():
         for i, coil in enumerate(self.coils):
             self.coils[i].value = curvalues[i]
 
+class PingvinKL():
+    def __init__(self, serialdevice='/dev/ttyS0', modbusaddr=1, debug=False):
+        self.coils = Coils(serialdevice, modbusaddr, debug)

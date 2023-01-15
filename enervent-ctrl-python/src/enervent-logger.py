@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import logging
-from EnerventCoils import PingvinCoils
+from EnerventCoils import PingvinKL
 
 VERSION = "0.0.1"
 
@@ -14,4 +14,4 @@ logging.basicConfig(
 
 if __name__ == "__main__":
     log.info(f"Starting enervent-logger {VERSION}")
-    pingvin = PingvinCoils('/dev/ttyS0',1,debug=True)
+    pingvin = PingvinKL('/dev/ttyS0',1,debug=True)
