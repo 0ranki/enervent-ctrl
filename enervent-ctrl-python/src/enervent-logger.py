@@ -2,6 +2,8 @@
 import minimalmodbus
 import logging
 
+VERSION = "0.0.1"
+
 ## Logging configuration
 log = logging.getLogger(__name__)
 logging.basicConfig(
@@ -11,4 +13,5 @@ logging.basicConfig(
     )
 
 if __name__ == "__main__":
-    log.info("Starting enervent-logger")
+    log.info(f"Starting enervent-logger {VERSION}")
+    
