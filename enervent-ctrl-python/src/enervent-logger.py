@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import logging
 from EnerventCoils import PingvinKL
-from flask import Flask
+from flask import Flask, request
 
 VERSION = "0.0.1"
 DEBUG = False
@@ -18,8 +18,18 @@ pingvin = PingvinKL('/dev/ttyS0',1,debug=DEBUG)
 app = Flask(__name__)
 
 @app.route('/api/v1/coils')
-def index():
+def get():
     return pingvin.coils.get()
+
+@app.route('/api/v1/coils/all')
+def get_all():
+    return pingvin.coils.get(include_reserved=True)
+
+@app.route('/api/v1/coils/<int:address>', methods=["GET","PUT"])
+def get_coil():
+    if request.method == 'GET':
+        return 
+
 
 if __name__ == "__main__":
     log.info(f"Starting enervent-logger {VERSION}")

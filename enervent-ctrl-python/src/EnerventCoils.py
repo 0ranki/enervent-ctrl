@@ -9,6 +9,15 @@ class EnerventCoil():
         self.value = 0
         self.description = description
         self.reserved = symbol == "reserved" and description == "reserved"
+
+    def serialize(self):
+        return {
+                    "value": self.value == 1,
+                    "symbol": self.symbol,
+                    "description": self.description,
+                    "reserved": self.reserved
+                }
+
 class Coils():
     """Class for handling Modbus coils"""
     coillogger = logging.getLogger(__name__)
@@ -93,8 +102,8 @@ class Coils():
         EnerventCoil()
     ]
 
-    def __init__(self, serialdevice='/dev/ttyS0', modbusaddr=1, debug=False):
-        self.pingvin = minimalmodbus.Instrument(serialdevice, modbusaddr)
+    def __init__(self, device, debug=False):
+        self.pingvin = device
         if debug: self.coillogger.debug("Updating coil values from device")
         self.update(debug)
 
@@ -127,18 +136,22 @@ class Coils():
             coilvals = coilvals + f"Coil {i}\t{coil.value} [{coil.symbol}] ({coil.description})\n"
         return coilvals
 
-    def serialize(self):
+    def serialize(self, include_reserved):
         """Returns coil values as parseable Python object"""
         coilvals = []
-        for coil in self.coils:
-            coilvals.append({"value": coil.value, "symbol": coil.symbol, "description": coil.description, "reserved": coil.reserved})
+        for i, coil in enumerate(self.coils):
+            if not coil.reserved or include_reserved:
+                coil = coil.serialize()
+                coil['address'] = i
+                coilvals.append(coil)
         return coilvals
 
-    def get(self, live=False):
+    def get(self, include_reserved=False, live=False):
         """Return all coil values in JSON format"""
-        return jsonify(self.serialize())
+        return jsonify(self.serialize(include_reserved))
 
 class PingvinKL():
     """Class for communicating with an Enervent Pinvin Kotilämpö ventilation/heating unit"""
     def __init__(self, serialdevice='/dev/ttyS0', modbusaddr=1, debug=False):
-        self.coils = Coils(serialdevice, modbusaddr, debug)
+        self.pingvin = minimalmodbus.Instrument(serialdevice, modbusaddr)
+        self.coils = Coils(self.pingvin, debug)
