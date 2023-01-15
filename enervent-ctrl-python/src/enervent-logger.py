@@ -17,3 +17,4 @@ if __name__ == "__main__":
     pingvin = PingvinKL('/dev/ttyS0',1,debug=True)
     print(pingvin.coils.value(1, debug=True))
     print(pingvin.coils.fetchValue(1, debug=True))
+    print(pingvin.coils.print())

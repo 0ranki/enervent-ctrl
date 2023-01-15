@@ -112,6 +112,10 @@ class Coils():
         if debug: self.coillogger.debug("Reading coil value from cache")
         return self.coils[address].value
 
+    def print(self, debug=False):
+        for i, coil in enumerate(self.coils):
+            print(f"Coil {i}\t{coil.value} [{coil.symbol}] ({coil.description})")
+
 class PingvinKL():
     def __init__(self, serialdevice='/dev/ttyS0', modbusaddr=1, debug=False):
         self.coils = Coils(serialdevice, modbusaddr, debug)
