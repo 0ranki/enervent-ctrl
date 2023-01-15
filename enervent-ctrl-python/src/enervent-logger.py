@@ -4,7 +4,7 @@ from EnerventCoils import PingvinKL
 from flask import Flask, request
 
 VERSION = "0.0.1"
-DEBUG = False
+DEBUG = True
 
 ## Logging configuration
 log = logging.getLogger(__name__)
@@ -24,15 +24,12 @@ def get_all():
 @app.route('/api/v1/coils/<int:address>', methods=["GET","PUT"])
 def coil(address):
     if request.method == 'GET':
-        coil = pingvin.coils[address].get(debug=DEBUG)
+        coil = pingvin.coils[address].get()
         return coil
-    elif request.method == 'POST':
-        return False
+    elif request.method == 'PUT':
+        return {"success": pingvin.coils.write(address)}
 
 
 if __name__ == "__main__":
     log.info(f"Starting enervent-logger {VERSION}")
-    # print(pingvin.coils.value(1, debug=DEBUG))
-    # print(pingvin.coils.fetchValue(1, debug=DEBUG))
-    # print(pingvin.coils.print())
     app.run(host='0.0.0.0',port=8888,debug=DEBUG)

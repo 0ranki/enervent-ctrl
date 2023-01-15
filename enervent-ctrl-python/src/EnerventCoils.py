@@ -6,13 +6,13 @@ class EnerventCoil():
     """Single coil data structure"""
     def __init__(self, symbol="reserved", description="reserved"):
         self.symbol = symbol
-        self.value = 0
+        self.value = False
         self.description = description
         self.reserved = symbol == "reserved" and description == "reserved"
 
     def serialize(self):
         return {
-                    "value": self.value == 1,
+                    "value": self.value,
                     "symbol": self.symbol,
                     "description": self.description,
                     "reserved": self.reserved
@@ -20,6 +20,9 @@ class EnerventCoil():
 
     def get(self):
          return jsonify(self.serialize())
+
+    def flip(self):
+        self.value = not self.value
 
 class Coils():
     """Class for handling Modbus coils"""
@@ -121,14 +124,14 @@ class Coils():
         if debug: self.coillogger.info(f"{len(self.coils)} coils registered")
         curvalues = self.pingvin.read_bits(0,len(self.coils),1)
         for i, coil in enumerate(self.coils):
-            self.coils[i].value = curvalues[i]
+            self.coils[i].value = bool(curvalues[i])
         if debug: self.coillogger.info("Coil values read succesfully")
 
     def fetchValue(self, address, debug=False):
         """Update single coil value from device and return it"""
         self.pingvin.debug = debug
         if debug: self.coillogger.debug("Updating coil value from device to cache")
-        self.coils[address].value = self.pingvin.read_bit(address, 1)
+        self.coils[address].value = bool(self.pingvin.read_bit(address, 1))
         return self.value(address, debug)
 
     def value(self, address, debug=False):
@@ -157,6 +160,13 @@ class Coils():
         """Return all coil values in JSON format"""
         if live: self.update(debug)
         return jsonify(self.serialize(include_reserved))
+
+    def write(self, address):
+        self.pingvin.write_bit(address, int(not self.coils[address].value))
+        if self.pingvin.read_bit(address, 1) != self.coils[address].value:
+            self.coils[address].flip()
+            return True
+        return False
 
 class PingvinKL():
     """Class for communicating with an Enervent Pinvin Kotilämpö ventilation/heating unit"""
