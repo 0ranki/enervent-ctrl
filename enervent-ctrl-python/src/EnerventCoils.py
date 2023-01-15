@@ -100,12 +100,13 @@ class Coils():
         for i, coil in enumerate(self.coils):
             self.coils[i].value = curvalues[i]
 
-    def value(self, address, debug=False):
+    def fetchValue(self, address, debug=False):
         self.pingvin.debug = debug
-        if debug: self.coillogger.debug("Reading coil value from device")
-        return self.pingvin.read_bit(address, 1)
+        if debug: self.coillogger.debug("Updating coil value from device to cache")
+        self.coils[address].value = self.pingvin.read_bit(address, 1)
+        return self.value(address, debug)
 
-    def updateValue(self, address, debug=False):
+    def value(self, address, debug=False):
         if debug: self.coillogger.debug("Reading coil value from cache")
         return self.coils[address].value
 

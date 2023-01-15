@@ -15,4 +15,5 @@ logging.basicConfig(
 if __name__ == "__main__":
     log.info(f"Starting enervent-logger {VERSION}")
     pingvin = PingvinKL('/dev/ttyS0',1,debug=True)
-    print(pingvin.coils.readValue(1, debug=True))
+    print(pingvin.coils.value(1, debug=True))
+    print(pingvin.coils.fetchValue(1, debug=True))
