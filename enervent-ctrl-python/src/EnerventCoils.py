@@ -18,6 +18,9 @@ class EnerventCoil():
                     "reserved": self.reserved
                 }
 
+    def get(self):
+         return jsonify(self.serialize())
+
 class Coils():
     """Class for handling Modbus coils"""
     coillogger = logging.getLogger(__name__)
@@ -42,6 +45,7 @@ class Coils():
         EnerventCoil("COIL_M_BOOST", "Manual boost 100%"),
         EnerventCoil("COIL_TEMP_BOOST_EN", "Temperature boost"),
         EnerventCoil("COIL_SNC", "Summer night cooling"),
+        EnerventCoil(),
         EnerventCoil(),
         EnerventCoil(),
         EnerventCoil(),
@@ -107,6 +111,9 @@ class Coils():
         if debug: self.coillogger.debug("Updating coil values from device")
         self.update(debug)
 
+    def __getitem__(self, item):
+        return self.coils[item]
+
     def update(self, debug=False):
         """Fetch all coils values from device"""
         self.pingvin.serial.timeout = 0.2
@@ -115,7 +122,7 @@ class Coils():
         curvalues = self.pingvin.read_bits(0,len(self.coils),1)
         for i, coil in enumerate(self.coils):
             self.coils[i].value = curvalues[i]
-        self.coillogger.info("Coil values read succesfully")
+        if debug: self.coillogger.info("Coil values read succesfully")
 
     def fetchValue(self, address, debug=False):
         """Update single coil value from device and return it"""
@@ -136,7 +143,7 @@ class Coils():
             coilvals = coilvals + f"Coil {i}\t{coil.value} [{coil.symbol}] ({coil.description})\n"
         return coilvals
 
-    def serialize(self, include_reserved):
+    def serialize(self, include_reserved=False):
         """Returns coil values as parseable Python object"""
         coilvals = []
         for i, coil in enumerate(self.coils):
@@ -146,8 +153,9 @@ class Coils():
                 coilvals.append(coil)
         return coilvals
 
-    def get(self, include_reserved=False, live=False):
+    def get(self, include_reserved=False, live=False, debug=False):
         """Return all coil values in JSON format"""
+        if live: self.update(debug)
         return jsonify(self.serialize(include_reserved))
 
 class PingvinKL():

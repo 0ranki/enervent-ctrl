@@ -18,17 +18,16 @@ pingvin = PingvinKL('/dev/ttyS0',1,debug=DEBUG)
 app = Flask(__name__)
 
 @app.route('/api/v1/coils')
-def get():
-    return pingvin.coils.get()
-
-@app.route('/api/v1/coils/all')
 def get_all():
-    return pingvin.coils.get(include_reserved=True)
+    return pingvin.coils.get(include_reserved=request.args.get('include_reserved'),live=request.args.get('live'),debug=DEBUG)
 
 @app.route('/api/v1/coils/<int:address>', methods=["GET","PUT"])
-def get_coil():
+def coil(address):
     if request.method == 'GET':
-        return 
+        coil = pingvin.coils[address].get(debug=DEBUG)
+        return coil
+    elif request.method == 'POST':
+        return False
 
 
 if __name__ == "__main__":
@@ -36,4 +35,4 @@ if __name__ == "__main__":
     # print(pingvin.coils.value(1, debug=DEBUG))
     # print(pingvin.coils.fetchValue(1, debug=DEBUG))
     # print(pingvin.coils.print())
-    app.run(host='0.0.0.0',port=8888,debug=True)
+    app.run(host='0.0.0.0',port=8888,debug=DEBUG)
