@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import logging
-from EnerventCoils import PingvinKL
+from PingvinKL import PingvinKL
 from flask import Flask, request
 
 VERSION = "0.0.1"
