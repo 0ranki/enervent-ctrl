@@ -2,18 +2,22 @@ import minimalmodbus
 import logging
 
 class EnerventCoil():
+    """Single coil data structure"""
     def __init__(self, symbol="reserved", description="reserved"):
         self.symbol = symbol
         self.value = 0
         self.description = description
         self.reserved = symbol == "reserved" and description == "reserved"
 class Coils():
+    """Class for handling Modbus coils"""
     coillogger = logging.getLogger(__name__)
     logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s %(message)s',
     datefmt='%y/%m/%d %H:%M:%S'
     )
+    ## coil descriptions and symbols courtesy of Ensto Enervent
+    ## https://doc.enervent.com/out/out.ViewDocument.php?documentid=59
     coils = [
         EnerventCoil("COIL_STOP", "Stop"),
         EnerventCoil("COIL_AWAY", "Away mode"),
@@ -94,6 +98,7 @@ class Coils():
         self.update(debug)
 
     def update(self, debug=False):
+        """Fetch all coils values from device"""
         self.pingvin.serial.timeout = 0.2
         self.pingvin.debug = debug
         if debug: self.coillogger.info(f"{len(self.coils)} coils registered")
@@ -103,19 +108,23 @@ class Coils():
         self.coillogger.info("Coil values read succesfully")
 
     def fetchValue(self, address, debug=False):
+        """Update single coil value from device and return it"""
         self.pingvin.debug = debug
         if debug: self.coillogger.debug("Updating coil value from device to cache")
         self.coils[address].value = self.pingvin.read_bit(address, 1)
         return self.value(address, debug)
 
     def value(self, address, debug=False):
+        """Return local coil value"""
         if debug: self.coillogger.debug("Reading coil value from cache")
         return self.coils[address].value
 
     def print(self, debug=False):
+        """Human-readable print of all coil values"""
         for i, coil in enumerate(self.coils):
             print(f"Coil {i}\t{coil.value} [{coil.symbol}] ({coil.description})")
 
 class PingvinKL():
+    """Class for communicating with an Enervent Pinvin Kotilämpö ventilation/heating unit"""
     def __init__(self, serialdevice='/dev/ttyS0', modbusaddr=1, debug=False):
         self.coils = Coils(serialdevice, modbusaddr, debug)
