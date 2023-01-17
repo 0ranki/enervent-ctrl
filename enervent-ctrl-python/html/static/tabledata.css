@@ -1,0 +1,17 @@
+.addr {
+    text-align: center;
+}
+.val {
+    text-align: center;
+}
+#coils {
+    padding: 2pt;
+    border-collapse: collapse;
+}
+thead {
+    border-bottom: 1px solid;
+    text-align: left;
+}
+td {
+    padding: 2pt;
+}
