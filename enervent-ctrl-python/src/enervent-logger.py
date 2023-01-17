@@ -29,6 +29,9 @@ def coil(address):
     elif request.method == 'PUT':
         return {"success": pingvin.coils.write(address)}
 
+@app.route('/')
+def dump():
+    return pingvin.coils.print(debug=DEBUG)
 
 if __name__ == "__main__":
     log.info(f"Starting enervent-logger {VERSION}")

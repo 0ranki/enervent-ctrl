@@ -4,11 +4,11 @@ from flask import jsonify
 
 class PingvinCoil():
     """Single coil data structure"""
-    def __init__(self, symbol="reserved", description="reserved"):
+    def __init__(self, symbol="-", description="-"):
         self.symbol = symbol
         self.value = False
         self.description = description
-        self.reserved = symbol == "reserved" and description == "reserved"
+        self.reserved = symbol == "-" and description == "-"
 
     def serialize(self):
         return {
@@ -88,7 +88,7 @@ class PingvinCoils():
         PingvinCoil(),
         PingvinCoil(),
         PingvinCoil("COIL_COOLING_EN", "Active cooling function enabled"),
-        PingvinCoil("COIL_LTO_EN"),
+        PingvinCoil("COIL_LTO_EN", "N/A"),
         PingvinCoil("COIL_HEATING_EN", "Active heating function enabled"),
         PingvinCoil("COIL_LTO_DEFROST_EN", "HRC defrosting function enabled during winter season"),
         PingvinCoil(),
@@ -142,8 +142,9 @@ class PingvinCoils():
     def print(self, debug=False):
         """Human-readable print of all coil values"""
         coilvals = ""
+        null = ""
         for i, coil in enumerate(self.coils):
-            coilvals = coilvals + f"Coil {i}\t{coil.value} [{coil.symbol}] ({coil.description})\n"
+            coilvals = coilvals + f"Coil {i : <{4}}{coil.value : <{2}} {coil.symbol : <{25}}{coil.description}\n"
         return coilvals
 
     def serialize(self, include_reserved=False):
