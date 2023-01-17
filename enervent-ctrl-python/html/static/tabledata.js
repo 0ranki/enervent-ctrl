@@ -1,5 +1,3 @@
-// TODO:    JS check
-//          checkboxes for live/reserved
 function zeroPad(number) {
     return ("0" + number).slice(-2)
 }
