@@ -28,12 +28,6 @@ class PingvinCoil():
 
 class PingvinCoils():
     """Class for handling Modbus coils"""
-    coillogger = logging.getLogger(__name__)
-    logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s %(message)s',
-    datefmt='%y/%m/%d %H:%M:%S'
-    )
     ## coil descriptions and symbols courtesy of Ensto Enervent
     ## https://doc.enervent.com/out/out.ViewDocument.php?documentid=59
     coils = [
@@ -114,8 +108,6 @@ class PingvinCoils():
     def __init__(self, device, semaphore, debug=False):
         self.pingvin = device
         self.semaphore = semaphore
-        # if debug: self.coillogger.debug("Updating coil values from device")
-        #self.update(debug)
 
     def __getitem__(self, item):
         return self.coils[item]
@@ -124,18 +116,18 @@ class PingvinCoils():
         """Fetch all coils values from device"""
         self.pingvin.serial.timeout = 0.2
         self.pingvin.debug = debug
-        if debug: self.coillogger.info(f"{len(self.coils)} coils registered")
+        if debug: logging.info(f"{len(self.coils)} coils registered")
         self.semaphore.acquire()
         curvalues = self.pingvin.read_bits(0,len(self.coils),1)
         self.semaphore.release()
         for i, coil in enumerate(self.coils):
             self.coils[i].value = bool(curvalues[i])
-        if debug: self.coillogger.info("Coil values read succesfully\n")
+        if debug: logging.info("Coil values read succesfully\n")
 
     def fetchValue(self, address, debug=False):
         """Update single coil value from device and return it"""
         self.pingvin.debug = debug
-        if debug: self.coillogger.debug("Updating coil value from device to cache")
+        if debug: logging.debug("Updating coil value from device to cache")
         self.semaphore.acquire()
         self.coils[address].value = bool(self.pingvin.read_bit(address, 1))
         self.semaphore.release()
@@ -143,7 +135,7 @@ class PingvinCoils():
 
     def value(self, address, debug=False):
         """Get single local coil value"""
-        if debug: self.coillogger.debug("Reading coil value from cache")
+        if debug: logging.debug("Reading coil value from cache")
         return self.coils[address].value
 
     def print(self, debug=False):
