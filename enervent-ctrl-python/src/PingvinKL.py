@@ -183,6 +183,6 @@ class PingvinKL():
             self.run = True
             logging.info("Starting data monitor loop")
             while self.run:
-                logging.info("Data monitor updating coil data")
+                if debug: logging.info("Data monitor updating coil data")
                 self.coils.update(debug)
                 sleep(interval)
