@@ -1,6 +1,7 @@
 import minimalmodbus
 import logging
 from flask import jsonify
+from threading import Semaphore
 
 class PingvinCoil():
     """Single coil data structure"""
@@ -109,8 +110,9 @@ class PingvinCoils():
         PingvinCoil()
     ]
 
-    def __init__(self, device, debug=False):
+    def __init__(self, device, semaphore, debug=False):
         self.pingvin = device
+        self.semaphore = semaphore
         if debug: self.coillogger.debug("Updating coil values from device")
         self.update(debug)
 
@@ -122,7 +124,9 @@ class PingvinCoils():
         self.pingvin.serial.timeout = 0.2
         self.pingvin.debug = debug
         if debug: self.coillogger.info(f"{len(self.coils)} coils registered")
+        self.semaphore.acquire()
         curvalues = self.pingvin.read_bits(0,len(self.coils),1)
+        self.semaphore.release()
         for i, coil in enumerate(self.coils):
             self.coils[i].value = bool(curvalues[i])
         if debug: self.coillogger.info("Coil values read succesfully")
@@ -131,7 +135,9 @@ class PingvinCoils():
         """Update single coil value from device and return it"""
         self.pingvin.debug = debug
         if debug: self.coillogger.debug("Updating coil value from device to cache")
+        self.semaphore.acquire()
         self.coils[address].value = bool(self.pingvin.read_bit(address, 1))
+        self.semaphore.release()
         return self.value(address, debug)
 
     def value(self, address, debug=False):
@@ -142,7 +148,6 @@ class PingvinCoils():
     def print(self, debug=False):
         """Human-readable print of all coil values"""
         coilvals = ""
-        null = ""
         for i, coil in enumerate(self.coils):
             coilvals = coilvals + f"Coil {i : <{4}}{coil.value : <{2}} {coil.symbol : <{25}}{coil.description}\n"
         return coilvals
@@ -163,14 +168,18 @@ class PingvinCoils():
         return jsonify(self.serialize(include_reserved))
 
     def write(self, address):
+        self.semaphore.acquire()
         self.pingvin.write_bit(address, int(not self.coils[address].value))
         if self.pingvin.read_bit(address, 1) != self.coils[address].value:
             self.coils[address].flip()
+            self.semaphore.release()
             return True
+        self.semaphore.release()
         return False
 
 class PingvinKL():
     """Class for communicating with an Enervent Pinvin Kotilämpö ventilation/heating unit"""
     def __init__(self, serialdevice='/dev/ttyS0', modbusaddr=1, debug=False):
+        self.semaphore = Semaphore()
         self.pingvin = minimalmodbus.Instrument(serialdevice, modbusaddr)
-        self.coils = PingvinCoils(self.pingvin, debug)
+        self.coils = PingvinCoils(self.pingvin, self.semaphore, debug)
