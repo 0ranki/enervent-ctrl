@@ -2,6 +2,7 @@ import minimalmodbus
 import logging
 from flask import jsonify
 from threading import Semaphore
+from time import sleep
 
 class PingvinCoil():
     """Single coil data structure"""
@@ -113,8 +114,8 @@ class PingvinCoils():
     def __init__(self, device, semaphore, debug=False):
         self.pingvin = device
         self.semaphore = semaphore
-        if debug: self.coillogger.debug("Updating coil values from device")
-        self.update(debug)
+        # if debug: self.coillogger.debug("Updating coil values from device")
+        #self.update(debug)
 
     def __getitem__(self, item):
         return self.coils[item]
@@ -129,7 +130,7 @@ class PingvinCoils():
         self.semaphore.release()
         for i, coil in enumerate(self.coils):
             self.coils[i].value = bool(curvalues[i])
-        if debug: self.coillogger.info("Coil values read succesfully")
+        if debug: self.coillogger.info("Coil values read succesfully\n")
 
     def fetchValue(self, address, debug=False):
         """Update single coil value from device and return it"""
@@ -183,3 +184,13 @@ class PingvinKL():
         self.semaphore = Semaphore()
         self.pingvin = minimalmodbus.Instrument(serialdevice, modbusaddr)
         self.coils = PingvinCoils(self.pingvin, self.semaphore, debug)
+        self.run = False
+
+    def monitor(self, interval=15, debug=False):
+        if not self.run: # Prevent starting two monitor threads
+            self.run = True
+            logging.info("Starting data monitor loop")
+            while self.run:
+                logging.info("Data monitor updating coil data")
+                self.coils.update(debug)
+                sleep(interval)

@@ -2,14 +2,19 @@
 import logging
 from PingvinKL import PingvinKL
 from flask import Flask, request
+import threading
 
 VERSION = "0.0.1"
 DEBUG = True
 
 ## Logging configuration
 log = logging.getLogger(__name__)
+if DEBUG:
+    dbglevel = logging.DEBUG
+else:
+    dbglevel = logging.INFO
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=dbglevel,
     format='%(asctime)s %(message)s',
     datefmt='%y/%m/%d %H:%M:%S'
     )
@@ -35,4 +40,6 @@ def dump():
 
 if __name__ == "__main__":
     log.info(f"Starting enervent-logger {VERSION}")
-    app.run(host='0.0.0.0',port=8888,debug=DEBUG)
+    datathread = threading.Thread(target=pingvin.monitor, kwargs={"interval": 15, "debug": DEBUG})
+    datathread.start()
+    app.run(host='0.0.0.0', port=8888)
