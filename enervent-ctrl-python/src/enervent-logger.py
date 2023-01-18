@@ -3,6 +3,7 @@ import logging
 from PingvinKL import PingvinKL
 from flask import Flask, request
 import threading
+from waitress import serve
 
 VERSION = "0.0.1"
 DEBUG = True
@@ -42,4 +43,5 @@ if __name__ == "__main__":
     log.info(f"Starting enervent-logger {VERSION}")
     datathread = threading.Thread(target=pingvin.monitor, kwargs={"interval": 15, "debug": DEBUG})
     datathread.start()
-    app.run(host='0.0.0.0', port=8888)
+    # app.run(host='0.0.0.0', port=8888)
+    serve(app, listen='*:8888', trusted_proxy='127.0.0.1', trusted_proxy_headers="x-forwarded-for x-forwarded-host x-forwarded-proto x-forwarded-port")
