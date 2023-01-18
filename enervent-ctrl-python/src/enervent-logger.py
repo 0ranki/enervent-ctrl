@@ -41,7 +41,7 @@ def dump():
 
 if __name__ == "__main__":
     log.info(f"Starting enervent-logger {VERSION}")
-    datathread = threading.Thread(target=pingvin.monitor, kwargs={"interval": 15, "debug": DEBUG})
+    datathread = threading.Thread(target=pingvin.monitor, kwargs={"interval": 2, "debug": DEBUG})
     datathread.start()
     # app.run(host='0.0.0.0', port=8888)
     serve(app, listen='*:8888', trusted_proxy='127.0.0.1', trusted_proxy_headers="x-forwarded-for x-forwarded-host x-forwarded-proto x-forwarded-port")

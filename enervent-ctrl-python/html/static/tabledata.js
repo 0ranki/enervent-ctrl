@@ -48,5 +48,5 @@ function getData() {
 
     // Using setTimeout instead of setInterval to avoid possible connection issues
     // There's no need to update exactly every 5 seconds, the skew is fine
-    setTimeout(getData, 5*1000);
+    setTimeout(getData, 1*1000);
 }
