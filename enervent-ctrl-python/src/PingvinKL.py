@@ -173,7 +173,7 @@ class PingvinCoils():
 class PingvinKL():
     """Class for communicating with an Enervent Pinvin Kotilämpö ventilation/heating unit"""
     def __init__(self, serialdevice='/dev/ttyS0', modbusaddr=1, debug=False):
-        self.semaphore = Semaphore()
+        self.semaphore = Lock()
         self.pingvin = minimalmodbus.Instrument(serialdevice, modbusaddr)
         self.coils = PingvinCoils(self.pingvin, self.semaphore, debug)
         self.run = False
