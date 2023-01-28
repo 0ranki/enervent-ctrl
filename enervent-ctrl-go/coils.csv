@@ -1,0 +1,72 @@
+0,COIL_STOP,Stop the machine
+1,COIL_AWAY,Set the machine to away mode
+2,COIL_AWAYL,Set the machine to away long mode
+3,-,-
+4,-,-
+5,-,-
+6,COIL_MAX_H,Force the machine to heat at maximum effect.
+7,COIL_MAX_C,Force the machine to cool at maximum effect.
+8,COIL_CO2_BOOST_EN,CO2 boosting enabled
+9,COIL_RH_BOOST_EN,Relative humidity boosting enabled
+10,COIL_M_BOOST,Boost the fanspeeds to 100% for a period of time
+11,COIL_TEMP_BOOST_EN,Temperature boosting enabled
+12,COIL_SNC,Summer night cooling (SNC) function enabled.
+13,-,-
+14,-,-
+15,-,-
+16,-,-
+17,-,-
+18,COIL_AWAY_H,Heating enabled/disabled in AWAY mode
+19,COIL_AWAY_C,Cooling enabled/disabled in AWAY mode
+20,-,-
+21,-,-
+22,-,-
+23,-,-
+24,-,-
+25,-,-
+26,-,-
+27,-,-
+28,-,-
+29,-,-
+30,COIL_LTO_ON,Heat recycler state (running=1, stopped = 0)
+31,-,-
+32,COIL_HEAT_ON,After heater element state (On = 1, Off = 0)
+33,-,-
+34,-,-
+35,-,-
+36,COIL_TEMP_DECREASE,Temperature decrease function desc
+37,COIL_OVERTIME,Programmatic equivalent of OVERTIME digital input.
+38,-,Emergency stop switch type desc
+39,-,-
+40,COIL_ECO_MODE,Eco mode desc
+41,COIL_ALARM_A,Alarm of class A active desc
+42,COIL_ALARM_B,Alarm of class B active desc
+43,COIL_CLK_PROG,A Clock program is currently active
+44,-,-
+45,-,-
+46,-,-
+47,COIL_SILENT_MODE,Silent mode desc
+48,COIL_STOP_SLP_COOLING,Electrical heater cool-off function enabled when the machine has stopped.
+49,COIL_SERVICE_EN,Service reminder enabled desc
+50,-,-
+51,-,-
+52,COIL_COOLING_EN,Cooling function enabled
+53,COIL_LTO_EN,Not used on MD.
+54,COIL_HEATING_EN,Heating function enabled
+55,COIL_LTO_DEFROST_EN,HRC defrosting function enabled during winter season
+56,-,-
+57,-,-
+58,-,-
+59,-,-
+60,-,-
+61,-,-
+62,-,-
+63,-,-
+64,-,-
+65,-,-
+66,-,-
+67,-,-
+68,-,-
+69,-,-
+70,-,-
+71,-,-
