@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -13,15 +14,20 @@ import (
 
 // single coil data
 type pingvinCoil struct {
-	Symbol      string
-	Value       bool
-	Description string
-	Reserved    bool
+	Address     int    `json:"address"`
+	Symbol      string `json:"symbol"`
+	Value       bool   `json:"value"`
+	Description string `json:"description"`
+	Reserved    bool   `json:"reserved"`
 }
 
-func newCoil(symbol string, description string) pingvinCoil {
+func newCoil(address string, symbol string, description string) pingvinCoil {
+	addr, err := strconv.Atoi(address)
+	if err != nil {
+		log.Fatal("newCoil: Atoi:", err)
+	}
 	reserved := symbol == "-" && description == "-"
-	coil := pingvinCoil{symbol, false, description, reserved}
+	coil := pingvinCoil{addr, symbol, false, description, reserved}
 	return coil
 }
 
@@ -121,7 +127,7 @@ func New() PingvinKL {
 	pingvin.buslock = &sync.Mutex{}
 	coilData := readCsvLines("coils.csv")
 	for i := 0; i < len(coilData); i++ {
-		pingvin.Coils = append(pingvin.Coils, newCoil(coilData[i][1], coilData[i][2]))
+		pingvin.Coils = append(pingvin.Coils, newCoil(coilData[i][0], coilData[i][1], coilData[i][2]))
 	}
 	return pingvin
 }

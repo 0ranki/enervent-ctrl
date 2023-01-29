@@ -28,9 +28,9 @@
 27,-,-
 28,-,-
 29,-,-
-30,COIL_LTO_ON,Heat recycler state (running=1, stopped = 0)
+30,COIL_LTO_ON,Heat recycler state (running=1 stopped=0)
 31,-,-
-32,COIL_HEAT_ON,After heater element state (On = 1, Off = 0)
+32,COIL_HEAT_ON,After heater element state (On=1 Off=0)
 33,-,-
 34,-,-
 35,-,-

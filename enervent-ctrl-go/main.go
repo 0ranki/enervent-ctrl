@@ -1,15 +1,31 @@
 package main
 
 import (
-	"fmt"
+	"encoding/json"
+	"log"
+	"net/http"
 
 	"github.com/0ranki/enervent-ctrl/enervent-ctrl-go/pingvinKL"
 )
 
+var (
+	version = "0.0.2"
+	pingvin pingvinKL.PingvinKL
+)
+
+func coils(w http.ResponseWriter, r *http.Request) {
+	json.NewEncoder(w).Encode(pingvin.Coils)
+}
+
+func listen() {
+	log.Println("Starting pingvinAPI...")
+	http.HandleFunc("/api/v1/coils/", coils)
+	log.Fatal(http.ListenAndServe(":8888", nil))
+}
+
 func main() {
-	pingvin := pingvinKL.New()
+	log.Println("enervent-ctrl version", version)
+	pingvin = pingvinKL.New()
 	pingvin.Update()
-	for i := 0; i < len(pingvin.Coils); i++ {
-		fmt.Println(pingvin.Coils[i].Symbol, pingvin.Coils[i].Value, pingvin.Coils[i].Description)
-	}
+	listen()
 }
