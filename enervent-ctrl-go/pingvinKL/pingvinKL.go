@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/goburrow/modbus"
@@ -26,7 +27,8 @@ func newCoil(symbol string, description string) pingvinCoil {
 
 // unit modbus data
 type PingvinKL struct {
-	Coils []pingvinCoil
+	Coils   []pingvinCoil
+	buslock *sync.Mutex
 }
 
 // read a CSV file containing data for coils or registers
@@ -64,6 +66,7 @@ func (p PingvinKL) getHandler() *modbus.RTUClientHandler {
 
 func (p PingvinKL) Update() {
 	handler := p.getHandler()
+	p.buslock.Lock()
 	err := handler.Connect()
 	if err != nil {
 		log.Fatal("Update: handler.Connect: ", err)
@@ -74,6 +77,7 @@ func (p PingvinKL) Update() {
 	if err != nil {
 		log.Fatal("Update: client.ReadCoils:", err)
 	}
+	p.buslock.Unlock()
 	// modbus.ReadCoils returns a byte array, with the first byte's bits representing coil values 0-7,
 	// second byte coils 8-15 etc.
 	// Within each byte, LSB represents the lowest n coil while MSB is the highest
@@ -95,6 +99,7 @@ func (p PingvinKL) Update() {
 
 func (p PingvinKL) ReadCoil(n uint16) []byte {
 	handler := p.getHandler()
+	p.buslock.Lock()
 	err := handler.Connect()
 	if err != nil {
 		log.Fatal("ReadCoil: handler.Connect: ", err)
@@ -102,15 +107,18 @@ func (p PingvinKL) ReadCoil(n uint16) []byte {
 	defer handler.Close()
 	client := modbus.NewClient(handler)
 	results, err := client.ReadCoils(n, 1)
+	p.buslock.Unlock()
 	if err != nil {
 		log.Fatal("ReadCoil: client.ReadCoils", err)
 	}
+	p.Coils[n].Value = results[0] == 1
 	return results
 }
 
 // create a PingvinKL struct, read coils and registers from CSVs
 func New() PingvinKL {
 	pingvin := PingvinKL{}
+	pingvin.buslock = &sync.Mutex{}
 	coilData := readCsvLines("coils.csv")
 	for i := 0; i < len(coilData); i++ {
 		pingvin.Coils = append(pingvin.Coils, newCoil(coilData[i][1], coilData[i][2]))
