@@ -1,7 +1,7 @@
 import minimalmodbus
 import logging
 from flask import jsonify
-from threading import Semaphore
+from threading import Lock
 from time import sleep
 
 class PingvinCoil():

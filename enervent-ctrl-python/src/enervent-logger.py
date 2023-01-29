@@ -6,7 +6,7 @@ import threading
 from waitress import serve
 
 VERSION = "0.0.1"
-DEBUG = True
+DEBUG = False
 
 ## Logging configuration
 log = logging.getLogger(__name__)
