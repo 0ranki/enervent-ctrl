@@ -2,16 +2,14 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"time"
 
 	"github.com/0ranki/enervent-ctrl/enervent-ctrl-go/pingvinKL"
 )
 
 func main() {
-	log.Println(time.Now())
 	pingvin := pingvinKL.New()
-	log.Println(time.Now())
-	fmt.Println(pingvin.ReadCoil(40))
-	log.Println(time.Now())
+	pingvin.Update()
+	for i := 0; i < len(pingvin.Coils); i++ {
+		fmt.Println(pingvin.Coils[i].Symbol, pingvin.Coils[i].Value, pingvin.Coils[i].Description)
+	}
 }
