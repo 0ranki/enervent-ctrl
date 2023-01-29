@@ -24,7 +24,7 @@ type pingvinCoil struct {
 func newCoil(address string, symbol string, description string) pingvinCoil {
 	addr, err := strconv.Atoi(address)
 	if err != nil {
-		log.Fatal("newCoil: Atoi:", err)
+		log.Fatal("newCoil: Atoi: ", err)
 	}
 	reserved := symbol == "-" && description == "-"
 	coil := pingvinCoil{addr, symbol, false, description, reserved}
@@ -81,7 +81,7 @@ func (p PingvinKL) Update() {
 	client := modbus.NewClient(handler)
 	results, err := client.ReadCoils(0, uint16(len(p.Coils)))
 	if err != nil {
-		log.Fatal("Update: client.ReadCoils:", err)
+		log.Fatal("Update: client.ReadCoils: ", err)
 	}
 	p.buslock.Unlock()
 	// modbus.ReadCoils returns a byte array, with the first byte's bits representing coil values 0-7,
@@ -115,7 +115,7 @@ func (p PingvinKL) ReadCoil(n uint16) []byte {
 	results, err := client.ReadCoils(n, 1)
 	p.buslock.Unlock()
 	if err != nil {
-		log.Fatal("ReadCoil: client.ReadCoils", err)
+		log.Fatal("ReadCoil: client.ReadCoils: ", err)
 	}
 	p.Coils[n].Value = results[0] == 1
 	return results
