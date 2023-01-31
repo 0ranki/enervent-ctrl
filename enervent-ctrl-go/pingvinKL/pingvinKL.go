@@ -30,13 +30,12 @@ type PingvinKL struct {
 
 // single register data
 type pingvinRegister struct {
-	Address        int    `json:"address"`
-	Symbol         string `json:"symbol"`
-	Value_signed   int16  `json:"value_signed"`
-	Value_unsigned uint16 `json:"value_unsigned"`
-	Signed         bool   `json:"signed"`
-	Description    string `json:"description"`
-	Reserved       bool   `json:"reserved"`
+	Address     int    `json:"address"`
+	Symbol      string `json:"symbol"`
+	Value       int    `json:"value"`
+	Signed      bool   `json:"signed"`
+	Description string `json:"description"`
+	Reserved    bool   `json:"reserved"`
 }
 
 func newCoil(address string, symbol string, description string) pingvinCoil {
@@ -55,7 +54,7 @@ func newRegister(address string, symbol string, signed bool, description string)
 		log.Fatal("newRegister: Atio: ")
 	}
 	reserved := symbol == "Reserved" && description == "Reserved"
-	register := pingvinRegister{addr, symbol, 0, 0, signed, description, reserved}
+	register := pingvinRegister{addr, symbol, 0, signed, description, reserved}
 	return register
 }
 
@@ -97,13 +96,13 @@ func (p PingvinKL) updateCoils() {
 	p.buslock.Lock()
 	err := handler.Connect()
 	if err != nil {
-		log.Fatal("Update: handler.Connect: ", err)
+		log.Fatal("updateCoils: handler.Connect: ", err)
 	}
 	defer handler.Close()
 	client := modbus.NewClient(handler)
 	results, err := client.ReadCoils(0, uint16(len(p.Coils)))
 	if err != nil {
-		log.Fatal("Update: client.ReadCoils: ", err)
+		log.Fatal("updateCoils: client.ReadCoils: ", err)
 	}
 	p.buslock.Unlock()
 	// modbus.ReadCoils returns a byte array, with the first byte's bits representing coil values 0-7,
@@ -125,8 +124,45 @@ func (p PingvinKL) updateCoils() {
 	}
 }
 
+func (p PingvinKL) updateRegisters() {
+	handler := p.getHandler()
+	p.buslock.Lock()
+	err := handler.Connect()
+	if err != nil {
+		log.Fatal("updateRegisters: handler.Connect: ", err)
+	}
+	defer handler.Close()
+	client := modbus.NewClient(handler)
+	regs := len(p.Registers)
+	k := 0
+	for k < regs {
+		r := 125
+		if regs-k < 125 {
+			r = regs - k
+		}
+		results, err := client.ReadHoldingRegisters(uint16(k), uint16(r))
+		if err != nil {
+			log.Fatal("updateRegisters: client.ReadCoils: ", err)
+		}
+		msb := true
+		value := 0
+		for i := 0; i < len(results); i++ {
+			if msb {
+				value = int(results[i]) << 8
+			} else {
+				value += int(results[i])
+				p.Registers[k].Value = value
+				k++
+			}
+			msb = !msb
+		}
+	}
+	p.buslock.Unlock()
+}
+
 func (p PingvinKL) Update() {
 	p.updateCoils()
+	p.updateRegisters()
 }
 
 func (p PingvinKL) ReadCoil(n uint16) []byte {
