@@ -21,6 +21,24 @@ type pingvinCoil struct {
 	Reserved    bool   `json:"reserved"`
 }
 
+// unit modbus data
+type PingvinKL struct {
+	Coils     []pingvinCoil
+	Registers []pingvinRegister
+	buslock   *sync.Mutex
+}
+
+// single register data
+type pingvinRegister struct {
+	Address        int    `json:"address"`
+	Symbol         string `json:"symbol"`
+	Value_signed   int16  `json:"value_signed"`
+	Value_unsigned uint16 `json:"value_unsigned"`
+	Signed         bool   `json:"signed"`
+	Description    string `json:"description"`
+	Reserved       bool   `json:"reserved"`
+}
+
 func newCoil(address string, symbol string, description string) pingvinCoil {
 	addr, err := strconv.Atoi(address)
 	if err != nil {
@@ -31,10 +49,14 @@ func newCoil(address string, symbol string, description string) pingvinCoil {
 	return coil
 }
 
-// unit modbus data
-type PingvinKL struct {
-	Coils   []pingvinCoil
-	buslock *sync.Mutex
+func newRegister(address string, symbol string, signed bool, description string) pingvinRegister {
+	addr, err := strconv.Atoi(address)
+	if err != nil {
+		log.Fatal("newRegister: Atio: ")
+	}
+	reserved := symbol == "Reserved" && description == "Reserved"
+	register := pingvinRegister{addr, symbol, 0, 0, signed, description, reserved}
+	return register
 }
 
 // read a CSV file containing data for coils or registers
@@ -70,7 +92,7 @@ func (p PingvinKL) getHandler() *modbus.RTUClientHandler {
 	return handler
 }
 
-func (p PingvinKL) Update() {
+func (p PingvinKL) updateCoils() {
 	handler := p.getHandler()
 	p.buslock.Lock()
 	err := handler.Connect()
@@ -103,6 +125,10 @@ func (p PingvinKL) Update() {
 	}
 }
 
+func (p PingvinKL) Update() {
+	p.updateCoils()
+}
+
 func (p PingvinKL) ReadCoil(n uint16) []byte {
 	handler := p.getHandler()
 	p.buslock.Lock()
@@ -125,9 +151,17 @@ func (p PingvinKL) ReadCoil(n uint16) []byte {
 func New() PingvinKL {
 	pingvin := PingvinKL{}
 	pingvin.buslock = &sync.Mutex{}
+	log.Println("Parsing coil data...")
 	coilData := readCsvLines("coils.csv")
 	for i := 0; i < len(coilData); i++ {
 		pingvin.Coils = append(pingvin.Coils, newCoil(coilData[i][0], coilData[i][1], coilData[i][2]))
+	}
+	log.Println("Parsing register data...")
+	registerData := readCsvLines("registers.csv")
+	for i := 0; i < len(registerData); i++ {
+		signed := registerData[i][2] == "int16"
+		pingvin.Registers = append(pingvin.Registers,
+			newRegister(registerData[i][0], registerData[i][1], signed, registerData[i][6]))
 	}
 	return pingvin
 }
