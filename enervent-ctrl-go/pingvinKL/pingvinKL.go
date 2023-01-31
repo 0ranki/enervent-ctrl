@@ -135,6 +135,9 @@ func (p PingvinKL) updateRegisters() {
 	client := modbus.NewClient(handler)
 	regs := len(p.Registers)
 	k := 0
+	// modbus.ReadHoldingRegisters can read 125 regs at a time, so first we loop
+	// until all the values are fethed, increasing the value of k for each register
+	// When there are less than 125 registers to go, it's the last pass
 	for k < regs {
 		r := 125
 		if regs-k < 125 {
@@ -144,6 +147,10 @@ func (p PingvinKL) updateRegisters() {
 		if err != nil {
 			log.Fatal("updateRegisters: client.ReadCoils: ", err)
 		}
+		// The values represent 16 bit integers, but modbus works with bytes
+		// Each even byte of the returned []byte is the 8 MSBs of a new 16-bit
+		// value, so for each even byte in the reponse slice we bitshift the byte
+		// left by 8, then add the odd byte as is to the shifted 16-bit value
 		msb := true
 		value := 0
 		for i := 0; i < len(results); i++ {
