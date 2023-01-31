@@ -39,7 +39,7 @@ type PingvinKL struct {
 
 // read a CSV file containing data for coils or registers
 func readCsvLines(file string) [][]string {
-	delim := ","
+	delim := ";"
 	data := [][]string{}
 	csv, err := os.Open(file)
 	if err != nil {
