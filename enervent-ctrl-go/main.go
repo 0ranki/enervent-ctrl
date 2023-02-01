@@ -11,6 +11,7 @@ import (
 var (
 	version = "0.0.2"
 	pingvin pingvinKL.PingvinKL
+	DEBUG   = false
 )
 
 func coils(w http.ResponseWriter, r *http.Request) {
@@ -20,9 +21,13 @@ func coils(w http.ResponseWriter, r *http.Request) {
 
 func registers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	log.Println("Received request for /registers")
+	if DEBUG {
+		log.Println("Received request for /registers")
+	}
 	json.NewEncoder(w).Encode(pingvin.Registers)
-	log.Println("Handled request for /registers")
+	if DEBUG {
+		log.Println("Handled request for /registers")
+	}
 }
 
 func listen() {

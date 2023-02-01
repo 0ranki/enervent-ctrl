@@ -199,6 +199,7 @@ func New() PingvinKL {
 	for i := 0; i < len(coilData); i++ {
 		pingvin.Coils = append(pingvin.Coils, newCoil(coilData[i][0], coilData[i][1], coilData[i][2]))
 	}
+	log.Println("Parsed", len(pingvin.Coils), "coils")
 	log.Println("Parsing register data...")
 	registerData := readCsvLines("registers.csv")
 	for i := 0; i < len(registerData); i++ {
@@ -206,5 +207,6 @@ func New() PingvinKL {
 		pingvin.Registers = append(pingvin.Registers,
 			newRegister(registerData[i][0], registerData[i][1], signed, registerData[i][6]))
 	}
+	log.Println("Parsed", len(pingvin.Registers), "registers")
 	return pingvin
 }
