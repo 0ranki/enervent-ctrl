@@ -2,6 +2,7 @@ package pingvinKL
 
 import (
 	"bufio"
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -33,7 +34,8 @@ type pingvinRegister struct {
 	Address     int    `json:"address"`
 	Symbol      string `json:"symbol"`
 	Value       int    `json:"value"`
-	Signed      bool   `json:"signed"`
+	Bitfield    string `json:"bitfield"`
+	Type        string `json:"type"`
 	Description string `json:"description"`
 	Reserved    bool   `json:"reserved"`
 }
@@ -48,13 +50,13 @@ func newCoil(address string, symbol string, description string) pingvinCoil {
 	return coil
 }
 
-func newRegister(address string, symbol string, signed bool, description string) pingvinRegister {
+func newRegister(address string, symbol string, typ string, description string) pingvinRegister {
 	addr, err := strconv.Atoi(address)
 	if err != nil {
 		log.Fatal("newRegister: Atio: ")
 	}
 	reserved := symbol == "Reserved" && description == "Reserved"
-	register := pingvinRegister{addr, symbol, 0, signed, description, reserved}
+	register := pingvinRegister{addr, symbol, 0, "00000000", typ, description, reserved}
 	return register
 }
 
@@ -161,10 +163,15 @@ func (p PingvinKL) updateRegisters() {
 			} else {
 				value += int16(results[i])
 				uvalue += uint16(results[i])
-				if p.Registers[k].Signed {
+				if p.Registers[k].Type == "int16" {
 					p.Registers[k].Value = int(value)
-				} else {
+				}
+				if p.Registers[k].Type == "uint16" || p.Registers[k].Type == "enumeration" {
 					p.Registers[k].Value = int(uvalue)
+				}
+				if p.Registers[k].Type == "bitfield" {
+					p.Registers[k].Value = int(value)
+					p.Registers[k].Bitfield = fmt.Sprintf("%08b", uvalue)
 				}
 				k++
 			}
@@ -210,12 +217,8 @@ func New() PingvinKL {
 	log.Println("Parsing register data...")
 	registerData := readCsvLines("registers.csv")
 	for i := 0; i < len(registerData); i++ {
-		signed := registerData[i][2] == "int16"
-		if !signed {
-			log.Println("Unsigned register", i, registerData[i][6])
-		}
 		pingvin.Registers = append(pingvin.Registers,
-			newRegister(registerData[i][0], registerData[i][1], signed, registerData[i][6]))
+			newRegister(registerData[i][0], registerData[i][1], registerData[i][2], registerData[i][6]))
 	}
 	log.Println("Parsed", len(pingvin.Registers), "registers")
 	return pingvin

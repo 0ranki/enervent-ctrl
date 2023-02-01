@@ -32,7 +32,7 @@
 31;HREG_NTC_X6;int16;10;;Input X6;Optional NTC-10 input X6 measurement;;;
 32;HREG_NTC_X7;int16;10;;Input X7;Optional NTC-10 input X7 measurement;;;
 33;HREG_ABS_HUM_CTRL_OUTPUT;int16;1;;Absolute humidity control output;-100...0% = dehumidifying, 0 = none, 0...100% = humidifying;;;
-34;HREG_NWK_STATUS;bitfield;1;;Network status;Ethernet block status;;;"#define EMAC_STATUS_FAIL 0x0001, EMAC_STATUS_OK  0x0002, EMAC_STATUS_AUTONEG_COMPLETE 0x0004, EMAC_STATUS_AUTONEG_FAIL    0x0008, EMAC_STATUS_LINK_OK         0x0010  /* 0: no link, 1: link ok */ ,  EMAC_STATUS_LINK_SPEED      0x0020  /* 0: 10 M, 1: 100M */, EMAC_STATUS_DUPLEX          0x0040  /* 0: half duplex, 1: full duplex */ EMAC_STATUS_INIT_ONGOING    0x0080   "
+34;HREG_NWK_STATUS;bitfield;1;;Network status;Ethernet block status;;;EMAC_STATUS_FAIL 0x0001, EMAC_STATUS_OK  0x0002, EMAC_STATUS_AUTONEG_COMPLETE 0x0004, EMAC_STATUS_AUTONEG_FAIL    0x0008, EMAC_STATUS_LINK_OK         0x0010  /* 0: no link, 1: link ok */, EMAC_STATUS_LINK_SPEED      0x0020  /* 0: 10 M, 1: 100M */, EMAC_STATUS_DUPLEX          0x0040  /* 0: half duplex, 1: full duplex */ , EMAC_STATUS_INIT_ONGOING    0x0080   
 35;HREG_RH_MEAN;uint16;1;;48h air humidity average;Mean relative humidity, with 48 hour history, updated every hour.;Average air humidity, 48h;Extract air 48h mean relative humidity \%RH at the unit (sensor RH30). Updated every hour;
 36;HREG_ABSHUM10;uint16;10;;Supply air absolute humidity;Supply air absolute humidity, calculated from sensors TE10 and RH10, assuming normal atmospheric pressure.;;;
 37;HREG_SEC_RTC;uint16;1;;s;RTC seconds.;s;RTC seconds;
@@ -42,8 +42,8 @@
 41;HREG_MONTH_RTC;uint16;1;;;RTC month.;;RTC month;
 42;HREG_YEAR_RTC;uint16;1;;;RTC year, exporessed in years since 2000.;;RTC year, expressed in years since 2000;
 43;Reserved;;;;;Reserved;;;
-44;HREG_MODE;bitfield;1;;Status;The current mode of the machine, used to display information to the user.;Status;All current states of unit, eg. Home, Central vacuum cleaner, HP/EDX defrost etc.;Bit 0 indicates Max cooling mode, bit 1: max heating. Bit 2: Machine is stopped due to A alarm. Bit 3 indicates the machine has been stopped by request (ie. not due to alarm condition). Bit 4: indicates Away state. Bit 5 is reserved. Bit 6 indicates temperature boosting, bit 7 CO2 boosting, bit 8 RH boosting, bit 9 manual boosting. Bit 10 overpressure mode, bit 11 cooker hood mode, bit 12 central vacuum cleaner mode. Bit 13 indicates cool-off period of electrical heating coil. Bit 14 indicates summer night cooling mode. Bit 15 indicates heat recovery wheel defrosting mode.  Value 0 indicates ï¿½normalï¿½ state, no special status is active. 
-45;HREG_EXTMODE;bitfield;1;;Temperature control step;Currently active temperature control step: Cooling, Heat recovery (LTO), or heating.;Temperature controller;"Displays current state of temperature controller; cooling, heat recovery, heating or none.";Bits 0,1,2,3 have ï¿½enumeratedï¿½ meaning:  TEMP_STEP_NONE = 0, TEMP_STEP_COOLING = 1, TEMP_STEP_LTO = 2, TEMP_STEP_HEATING = 4, TEMP_STEP_STARTUP = 7, TEMP_STEP_DEHUMIDIFICATION = 8. Bit 15 indicates Aqua mode, bit 14 indicates pre-heating active, bit 13 indicates that HP compressor effect is being limited, bit 12 indicates defrosting state of the HP or MDX unit
+44;HREG_MODE;bitfield;1;;Status;The current mode of the machine, used to display information to the user.;Status;All current states of unit, eg. Home, Central vacuum cleaner, HP/EDX defrost etc.;Bit 0 indicates Max cooling mode, bit 1: max heating. Bit 2: Machine is stopped due to A alarm. Bit 3 indicates the machine has been stopped by request (ie. not due to alarm condition). Bit 4: indicates Away state. Bit 5 is reserved. Bit 6 indicates temperature boosting, bit 7 CO2 boosting, bit 8 RH boosting, bit 9 manual boosting. Bit 10 overpressure mode, bit 11 cooker hood mode, bit 12 central vacuum cleaner mode. Bit 13 indicates cool-off period of electrical heating coil. Bit 14 indicates summer night cooling mode. Bit 15 indicates heat recovery wheel defrosting mode.  Value 0 indicates “normal” state, no special status is active. 
+45;HREG_EXTMODE;bitfield;1;;Temperature control step;Currently active temperature control step: Cooling, Heat recovery (LTO), or heating.;Temperature controller;"Displays current state of temperature controller; cooling, heat recovery, heating or none.";Bits 0,1,2,3 have “enumerated” meaning:  TEMP_STEP_NONE = 0, TEMP_STEP_COOLING = 1, TEMP_STEP_LTO = 2, TEMP_STEP_HEATING = 4, TEMP_STEP_STARTUP = 7, TEMP_STEP_DEHUMIDIFICATION = 8. Bit 15 indicates Aqua mode, bit 14 indicates pre-heating active, bit 13 indicates that HP compressor effect is being limited, bit 12 indicates defrosting state of the HP or MDX unit
 46;HREG_ROOM_TEMP;int16;10;;Room temperature average;TE20 room temperature, average value calculated from op panel sensors  and room temperature transmitters.;Room temperature average;Room temperature (average temperature of sensors connected to OP wallmounts and AI temperature measurements if connected);
 47;HREG_CASCADE_SP;int16;10;;Setpoint for supply air;Setpoint for temperature controller responsible for maintaining the room supply air at a constant level;Setpoint for supply air;Setpoint for temperature controller responsible for maintaining the room supply air at a constant level;
 48;HREG_DISPLAY_SP;int16;10;;;Temperature controller setpoint shown to user;;;
@@ -135,7 +135,7 @@
 134;HREG_TE01_24H_AVG;int16;10;;Average outside temperature;24-hour outside temperature average;;;
 135;HREG_T_SETPOINT;int16;10;0 - 500;Supply air setpoint;The desired setpoint set by the user.;Supply air setpoint;Desired setpoint set by the user;
 136;Reserved;;;;;Reserved;;;
-137;HREG_TE01_SUMMER_WINTER_THRESHOLD;int16;10;-100 - 150;Summer/Winter threshold;Summer/Winter season 24-hour average outside temperature threshold value;Summer/winter threshold temperature;"Outside air 24h average temperature; in summer mode extract air 48h average humidity, in winter mode a fixed \%RH threshold";
+137;HREG_TE01_SUMMER_WINTER_THRESHOLD;int16;10;-250;Summer/Winter threshold;Summer/Winter season 24-hour average outside temperature threshold value;Summer/winter threshold temperature;"Outside air 24h average temperature; in summer mode extract air 48h average humidity, in winter mode a fixed \%RH threshold";
 138;Reserved;;;;;Reserved;;;
 139;Reserved;;;;;Reserved;;;
 140;Reserved;;;;;Reserved;;;
@@ -208,13 +208,13 @@
 207;Reserved;;;;;Reserved;;;
 208;Reserved;;;;;Reserved;;;
 209;Reserved;;;;;Reserved;;;
-210;HREG_DAY_WC1;bitfield;1;;Week timer slot #1;Week timer 1 Days when allowed. ;Days;;Bit 0: Sunday ï¿½ Bit 6: Saturday
+210;HREG_DAY_WC1;bitfield;1;;Week timer slot #1;Week timer 1 Days when allowed. ;Days;;Bit 0: Sunday … Bit 6: Saturday
 211;HREG_STA_HOUR_WC1;uint16;1;;;Week timer 1 Start h;WC1 Start h;WC1 Start h;
 212;HREG_STA_MIN_WC1;uint16;1;;;Week timer 1 Start m;WC1 Start m;WC1 Start m;
 213;HREG_STO_HOUR_WC1;uint16;1;;;Week timer 1 Stop h;WC1 Stop h;WC1 Stop h;
 214;HREG_STO_MIN_WC1;uint16;1;;;Week timer 1 Stop m;WC1 Stop m;WC1 Stop m;
-215;HREG_WC1;enumeration;1;;;Week timer 1 Function;WC1 Function;WC1 Function;
-216;HREG_DAY_WC2;bitfield;1;;Week timer slot #2;Week timer 2 Days when allowed. ;Days;Days;#define TIMER_PROGRAM_OFF 0 #define TIMER_AWAY        1 #define TIMER_AWAY_LONG   2 #define TIMER_HEAT_DIS    3 #define TIMER_COOL_DIS    4 #define TIMER_TEMP_DECR   5 #define TIMER_MAX_H       6 #define TIMER_MAX_C       7 #define TIMER_RELAY       16 #define TIMER_BOOST       17 /* Circulation air state change time program (Pallas) */ #define TIMER_CLOSED_CIRCULATION 18 /* This time program function is relevant in OFFICE program variant (use  * method) and it means that the machine should be running (instead of  * being in STOP state). */ #define TIMER_RUNTIME     30 
+215;HREG_WC1;enumeration;1;;;Week timer 1 Function;WC1 Function;WC1 Function;#define TIMER_PROGRAM_OFF 0 #define TIMER_AWAY        1 #define TIMER_AWAY_LONG   2 #define TIMER_HEAT_DIS    3 #define TIMER_COOL_DIS    4 #define TIMER_TEMP_DECR   5 #define TIMER_MAX_H       6 #define TIMER_MAX_C       7 #define TIMER_RELAY       16 #define TIMER_BOOST       17 /* Circulation air state change time program (Pallas) */ #define TIMER_CLOSED_CIRCULATION 18 /* This time program function is relevant in OFFICE program variant (use  * method) and it means that the machine should be running (instead of  * being in STOP state). */ #define TIMER_RUNTIME     30 
+216;HREG_DAY_WC2;bitfield;1;;Week timer slot #2;Week timer 2 Days when allowed. ;Days;Days;
 217;HREG_STA_HOUR_WC2;uint16;1;;;Week timer 2 Start h;WC1 Start h;WC1 Start h;
 218;HREG_STA_MIN_WC2;uint16;1;;;Week timer 2 Start m;WC1 Start m;WC1 Start m;
 219;HREG_STO_HOUR_WC2;uint16;1;;;Week timer 2 Stop h;WC1 Stop h;WC1 Stop h;
@@ -330,18 +330,18 @@
 329;HREG_WC20;uint16;1;;;Week timer 20 Function;;;
 330;HREG_STA_PV_Y1;uint16;1;;Year timer slot #1;Year program 1 start day-of-month;;;
 331;HREG_STA_KK_Y1;uint16;1;;;Year program 1 stop month;;;
-332;HREG_ACTIVE_TIMEPROGRAMS_1;uint16;1;;Active time programs, week slots 1-16;;;;
+332;HREG_ACTIVE_TIMEPROGRAMS_1;uint16;1;;Active time programs, week slots 1-16;Active time programs, week slots 1-16;;;
 333;HREG_STA_HOUR_Y1;uint16;1;;;Year program 1 start hour;;;
 334;HREG_STA_MIN_Y1;uint16;1;;;Year program 1 start minute;;;
 335;HREG_STO_PV_Y1;uint16;1;;;Year program 1 stop day of month;;;
 336;HREG_STO_KK_Y1;uint16;1;;;Year program 1 stop month;;;
-337;HREG_ACTIVE_TIMEPROGRAMS_2;uint16;1;;Active time programs, week slots 17-20 and year slots 1-5;;;;
+337;HREG_ACTIVE_TIMEPROGRAMS_2;uint16;1;;Active time programs, week slots 17-20 and year slots 1-5;Active time programs, week slots 17-20 and year slots 1-5;;;
 338;HREG_STO_HOUR_Y1;uint16;1;;;Year program 1 stop hour;;;
 339;HREG_STO_MIN_Y1;uint16;1;;;Year program 1 stop minute;;;
 340;HREG_Y1;uint16;1;;;Year program 1 action;;;#define TIMER_PROGRAM_OFF 0 #define TIMER_AWAY        1 #define TIMER_AWAY_LONG   2 #define TIMER_HEAT_DIS    3 #define TIMER_COOL_DIS    4 #define TIMER_TEMP_DECR   5 #define TIMER_MAX_H       6 #define TIMER_MAX_C       7 #define TIMER_RELAY       16 #define TIMER_BOOST       17 /* Circulation air state change time program (Pallas) */ #define TIMER_CLOSED_CIRCULATION 18 /* This time program function is relevant in OFFICE program variant (use  * method) and it means that the machine should be running (instead of  * being in STOP state). */ #define TIMER_RUNTIME     30 
 341;HREG_STA_PV_Y2;uint16;1;;Year timer slot #2;Year program 2 start day-of-month;;;
 342;HREG_STA_KK_Y2;uint16;1;;;Year program 2 stop month;;;
-343;HREG_UPTIME;uint16;1;;System uptime;;;;Warning: the count is approximative, it should not be used for time-keeping purposes
+343;HREG_UPTIME;uint16;1;;System uptime;System uptime;;;Warning: the count is approximative, it should not be used for time-keeping purposes
 344;HREG_STA_HOUR_Y2;uint16;1;;;Year program 2 start hour;;;
 345;HREG_STA_MIN_Y2;uint16;1;;;Year program 2 start minute;;;
 346;HREG_STO_PV_Y2;uint16;1;;;Year program 2 stop day of month;;;
@@ -352,29 +352,29 @@
 351;HREG_Y2;uint16;1;;;Year program 2 action;;;
 352;HREG_STA_PV_Y3;uint16;1;;Year timer slot #3;Year program 3 start day-of-month;;;
 353;HREG_STA_KK_Y3;uint16;1;;;Year program 3 stop month;;;
-354;HREG_BOOTLOADER_VERSION;uint16;1;;Bootloader version;;;;
+354;HREG_BOOTLOADER_VERSION;uint16;1;;Bootloader version;Bootloader version;;;
 355;HREG_STA_HOUR_Y3;uint16;1;;;Year program 3 start hour;;;
 356;HREG_STA_MIN_Y3;uint16;1;;;Year program 3 start minute;;;
 357;HREG_STO_PV_Y3;uint16;1;;;Year program 3 stop day of month;;;
 358;HREG_STO_KK_Y3;uint16;1;;;Year program 3 stop month;;;
-359;HREG_FILTER_TEST_HR;uint16;1;;Filter test hour;;;;
+359;HREG_FILTER_TEST_HR;uint16;1;;Filter test hour;Filter test hour;;;
 360;HREG_STO_HOUR_Y3;uint16;1;;;Year program 3 stop hour;;;
 361;HREG_STO_MIN_Y3;uint16;1;;;Year program 3 stop minute;;;
 362;HREG_Y3;uint16;1;;;Year program 3 action;;;
 363;HREG_STA_PV_Y4;uint16;1;;Year timer slot #4;Year program 4 start day-of-month;;;
 364;HREG_STA_KK_Y4;uint16;1;;;Year program 4 stop month;;;
-365;HREG_FILTER_TEST_DAYS;uint16;1;;Filter test day-of-week;;;;Expressed as a bitfield similar to week time programs
+365;HREG_FILTER_TEST_DAYS;uint16;1;;Filter test day-of-week;Filter test day-of-week;;;Expressed as a bitfield similar to week time programs
 366;HREG_STA_HOUR_Y4;uint16;1;;;Year program 4 start hour;;;
 367;HREG_STA_MIN_Y4;uint16;1;;;Year program 4 start minute;;;
 368;HREG_STO_PV_Y4;uint16;1;;;Year program 4 stop day of month;;;
 369;HREG_STO_KK_Y4;uint16;1;;;Year program 4 stop month;;;
-370;HREG_FILTER_TEST_TF;uint16;1;;Filter test TF fan speed;;;;During filter test mode TF will run at this constant fanspeed even in constant duct pressure mode.  Note that if value is outside range 20-100, 100% will be used
+370;HREG_FILTER_TEST_TF;uint16;1;;Filter test TF fan speed;Filter test TF fan speed;;;During filter test mode TF will run at this constant fanspeed even in constant duct pressure mode.  Note that if value is outside range 20-100, 100% will be used
 371;HREG_STO_HOUR_Y4;uint16;1;;;Year program 4 stop hour;;;
 372;HREG_STO_MIN_Y4;uint16;1;;;Year program 4 stop minute;;;
 373;HREG_Y4;uint16;1;;;Year program 4 action;;;
 374;HREG_STA_PV_Y5;uint16;1;;Year timer slot #5;Year program 5 start day-of-month;;;
 375;HREG_STA_KK_Y5;uint16;1;;;Year program 5 stop month;;;
-376;HREG_FILTER_TEST_PF;uint16;1;;Filter test PF fan speed;;;;During filter test mode PF will run at this constant fanspeed even in constant duct pressure mode.  Note that if value is outside range 20-100, 100% will be used
+376;HREG_FILTER_TEST_PF;uint16;1;;Filter test PF fan speed;Filter test PF fan speed;;;During filter test mode PF will run at this constant fanspeed even in constant duct pressure mode.  Note that if value is outside range 20-100, 100% will be used
 377;HREG_STA_HOUR_Y5;uint16;1;;;Year program 5 start hour;;;
 378;HREG_STA_MIN_Y5;uint16;1;;;Year program 5 start minute;;;
 379;HREG_STO_PV_Y5;uint16;1;;;Year program 5 stop day of month;;;
@@ -384,7 +384,7 @@
 383;HREG_STO_MIN_Y5;uint16;1;;;Year program 5 stop minute;;;
 384;HREG_Y5;uint16;1;;;Year program 5 action;;;
 385;HREG_ALARM1_ALMTYPE;uint16;1;;Alarm log entry #1;Alarm 1 (newest) alarm type;;Alarm 1 (newest) alarm type;ALARM_TE05_L =        1,      ALARM_TE10_L =       2,      ALARM_TE10_H =       3,      ALARM_TE20_H =       4,      ALARM_TE30_L =       5,      ALARM_TE30_H  =      6,      ALARM_HP       =     7,    /* This is both HP and MDX */      ALARM_SLP       =    8,      ALARM_TE45_L     =   9,      ALARM_LTO        =   10,      ALARM_COOL        =  11,      ALARM_EMERGENCY_STOP   =  12 ,       ALARM_EXTERNAL         = 13,   /** This used to be ALARM_FIRE on EDA */      ALARM_SERVICE       =14 ,             ALARM_PDS10       =  15,      ALARM_SPLY_FILT_H =  16,      ALARM_EXT_FILT_H  =  17,      ALARM_SPLY_FILT_L =  18 ,  /* This alarm is actually not in use. It is relevant only for large machines with 2-speed fan control */      ALARM_EXT_FILT_L  =  19  , /* This alarm is actually not in use. It is relevant only for large machines with 2-speed fan control */      ALARM_TF_PRES       =  20,      ALARM_PF_PRES       =  21 ,     ALARM_TE50_H   = 22,    ALARM_TE52_H   = 24,      ALARM_TF_ROTATION = 25,      ALARM_PF_ROTATION = 26,      ALARM_TE02_H   = 27,      ALARM_SERVICE_CONSTANT_DUCT_PRES = 28,   /* Under constant duct pressure control, Service alarm is triggered then fanspeeds reach a defined limit */ 
-386;HREG_ALARM1_STATECLASS;uint16;1;;;Alarm 1 This defines the status (low byte) of the alarm;;;ALARM_STATE_OFF = 0, ALARM_STATE_ACKED = 1, ALARM_STATE_ON = 2. Write ï¿½1ï¿½ or ï¿½2ï¿½ to this register to acknowledge the alarm.
+386;HREG_ALARM1_STATECLASS;uint16;1;;;Alarm 1 This defines the status (low byte) of the alarm;;;ALARM_STATE_OFF = 0, ALARM_STATE_ACKED = 1, ALARM_STATE_ON = 2. Write “1” or “2” to this register to acknowledge the alarm.
 387;HREG_ALARM1_YY;uint16;1;;;Alarm 1 Alarm year;;;
 388;HREG_ALARM1_MM;uint16;1;;;Alarm 1 Alarm month;;;
 389;HREG_ALARM1_DD;uint16;1;;;Alarm 1 Alarm day.;;;
@@ -578,7 +578,7 @@
 577;Reserved;;;;;Reserved;;;
 578;HREG_B_ALARM_START;uint16;1;;Start time;B alarm relay signaling allowed start hour.;Start time;Allowed start time for B alarm output;The defined time is HH:00, where HH is the register's value
 579;HREG_B_ALARM_STOP;uint16;1;;Ending time;B alarm relay signaling allowed stop hour.;Ending time;Allowed stop time for B alarm output;The defined time is HH:00, where HH is the register's value
-580;HREG_B_ALARM_WEEKDAYS;bitfield;1;;Weekdays;B alarm relay signaling allowed weekdays (bitmap, stored in low 7 bits of the register).;Weekdays;Choose allowed weekdays for B alarm output;Bit 0: Sunday ï¿½ Bit 6: Saturday
+580;HREG_B_ALARM_WEEKDAYS;bitfield;1;;Weekdays;B alarm relay signaling allowed weekdays (bitmap, stored in low 7 bits of the register).;Weekdays;Choose allowed weekdays for B alarm output;Bit 0: Sunday … Bit 6: Saturday
 581;HREG_N_O_ALARMS;uint16;1;;Number of alarms;Current number of alarms in the alarm log.;Number of alarms;Current number of alarms in the alarm log;
 582;HREG_C_MIN_RTC;uint16;1;;;RTC interface for changing minutes field;;;
 583;HREG_C_HOUR_RTC;uint16;1;;;RTC interface for changing hour field;;;
@@ -772,7 +772,7 @@
 771;Reserved;;;;;Reserved;;;
 772;Reserved;;;;;Reserved;;;
 773;Reserved;;;;;Reserved;;;
-774;HREG_EFFECTIVE_CIRCULATION;uint16;1;;Fan speed, circulation air;Circulation air fan's current speed;;;Kotilï¿½mpï¿½, EMB, Mixbox
+774;HREG_EFFECTIVE_CIRCULATION;uint16;1;;Fan speed, circulation air;Circulation air fan's current speed;;;Kotilämpö, EMB, Mixbox
 775;Reserved;;;;;Reserved;;;
 776;Reserved;;;;;Reserved;;;
 777;Reserved;;;;;Reserved;;;
