@@ -152,13 +152,20 @@ func (p PingvinKL) updateRegisters() {
 		// value, so for each even byte in the reponse slice we bitshift the byte
 		// left by 8, then add the odd byte as is to the shifted 16-bit value
 		msb := true
-		value := 0
+		value := int16(0)
+		uvalue := uint16(0)
 		for i := 0; i < len(results); i++ {
 			if msb {
-				value = int(results[i]) << 8
+				value = int16(results[i]) << 8
+				uvalue = uint16(results[i]) << 8
 			} else {
-				value += int(results[i])
-				p.Registers[k].Value = value
+				value += int16(results[i])
+				uvalue += uint16(results[i])
+				if p.Registers[k].Signed {
+					p.Registers[k].Value = int(value)
+				} else {
+					p.Registers[k].Value = int(uvalue)
+				}
 				k++
 			}
 			msb = !msb
@@ -204,6 +211,9 @@ func New() PingvinKL {
 	registerData := readCsvLines("registers.csv")
 	for i := 0; i < len(registerData); i++ {
 		signed := registerData[i][2] == "int16"
+		if !signed {
+			log.Println("Unsigned register", i, registerData[i][6])
+		}
 		pingvin.Registers = append(pingvin.Registers,
 			newRegister(registerData[i][0], registerData[i][1], signed, registerData[i][6]))
 	}
