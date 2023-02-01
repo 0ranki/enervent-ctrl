@@ -21,7 +21,12 @@ func coils(w http.ResponseWriter, r *http.Request) {
 func listen() {
 	log.Println("Starting pingvinAPI...")
 	http.HandleFunc("/api/v1/coils/", coils)
-	log.Fatal(http.ListenAndServe(":8888", nil))
+	static := http.FileServer(http.Dir("./static/html"))
+	http.Handle("/", static)
+	err := http.ListenAndServe(":8888", nil)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func main() {
