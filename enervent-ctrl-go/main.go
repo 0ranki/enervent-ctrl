@@ -1,12 +1,17 @@
 package main
 
 import (
+	"embed"
 	"encoding/json"
+	"io/fs"
 	"log"
 	"net/http"
 
 	"github.com/0ranki/enervent-ctrl/enervent-ctrl-go/pingvinKL"
 )
+
+//go:embed static/html/*
+var static embed.FS
 
 var (
 	version = "0.0.2"
@@ -34,9 +39,13 @@ func listen() {
 	log.Println("Starting pingvinAPI...")
 	http.HandleFunc("/api/v1/coils/", coils)
 	http.HandleFunc("/api/v1/registers/", registers)
-	static := http.FileServer(http.Dir("./static/html"))
-	http.Handle("/", static)
-	err := http.ListenAndServe(":8888", nil)
+	html, err := fs.Sub(static, "static/html")
+	if err != nil {
+		log.Fatal(err)
+	}
+	htmlroot := http.FileServer(http.FS(html))
+	http.Handle("/", htmlroot)
+	err = http.ListenAndServe(":8888", nil)
 	if err != nil {
 		log.Fatal(err)
 	}
