@@ -14,19 +14,37 @@ function timeStamp() {
 }
 
 function coils(data) {
-    document.getElementById('datatable').innerHTML = "";
-            for (n=0; n<data.length; n++) {
-                tablerow = `<tr><td class="addr" id="addr_${data[n].address}">${data[n].address}</td>\
-                                <td class ="val" id="value_${data[n].address}">${Number(data[n].value)}</td>\
-                                <td class="symbol" id="symbol_${data[n].address}">${data[n].symbol}</td>\
-                                <td class="desc" id="description_${data[n].address}">${data[n].description}</td></tr>`
-                document.getElementById('datatable').innerHTML += tablerow
+    datable = document.getElementById('datatable')
+
+    for (n=0; n<data.length; n++) {
+        tablerow = document.createElement("tr")
+        fields = ["address", "value", "symbol", "description"]
+
+        for (i=0; i<fields.length; i++) {
+            td = document.createElement("td")
+            value = document.createTextNode(data[n][fields[i]])
+            if (fields[i] == "value") {
+                value = document.createTextNode(Number(data[n][fields[i]]))
             }
+            td.appendChild(value)
+            tablerow.appendChild(td)
+        }
+
+        datatable.appendChild(tablerow)
+    }
+    // document.getElementById('datatable').innerHTML = "";
+    //         for (n=0; n<data.length; n++) {
+    //             tablerow = `<tr><td class="addr" id="addr_${data[n].address}">${data[n].address}</td>\
+    //                             <td class ="val" id="value_${data[n].address}">${Number(data[n].value)}</td>\
+    //                             <td class="symbol" id="symbol_${data[n].address}">${data[n].symbol}</td>\
+    //                             <td class="desc" id="description_${data[n].address}">${data[n].description}</td></tr>`
+    //             document.getElementById('datatable').innerHTML += tablerow
+    //         }
 }
 
 function registers(data) {
     console.log(`${timeStamp()} Filling register data...`)
-    datable = document.getElementById('datatable').innerHTML
+    datable = document.getElementById('datatable')
 
     for (n=0; n<data.length; n++) {
         tablerow = document.createElement("tr")
@@ -54,6 +72,7 @@ function getData() {
     if (document.location.pathname == "/coils/") {
         url = "/api/v1/coils"
         document.getElementById("title").innerHTML = "Coils | Enervent Pingvin Kotilämpö"
+        document.getElementById('caption').innerHTML = "Coil values at "
     }
     else if (document.location.pathname == "/registers/") {
         url = "/api/v1/registers"
@@ -84,5 +103,5 @@ function getData() {
 
     // Using setTimeout instead of setInterval to avoid possible connection issues
     // There's no need to update exactly every 5 seconds, the skew is fine
-    setTimeout(getData, 30*1000);
+    setTimeout(getData, 5*1000);
 }
