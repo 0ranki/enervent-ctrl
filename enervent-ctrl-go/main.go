@@ -10,6 +10,9 @@ import (
 	"github.com/0ranki/enervent-ctrl/enervent-ctrl-go/pingvinKL"
 )
 
+// Remember to dereference the symbolic links under ./static/html
+// prior to building the binary e.g. by using tar
+
 //go:embed static/html/*
 var static embed.FS
 
