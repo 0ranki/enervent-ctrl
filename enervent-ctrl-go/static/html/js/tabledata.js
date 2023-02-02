@@ -22,9 +22,10 @@ function coils(data) {
 
         for (i=0; i<fields.length; i++) {
             td = document.createElement("td")
-            value = document.createTextNode(data[n][fields[i]])
             if (fields[i] == "value") {
                 value = document.createTextNode(Number(data[n][fields[i]]))
+            } else {
+                value = document.createTextNode(data[n][fields[i]])
             }
             td.appendChild(value)
             tablerow.appendChild(td)
@@ -32,14 +33,6 @@ function coils(data) {
 
         datatable.appendChild(tablerow)
     }
-    // document.getElementById('datatable').innerHTML = "";
-    //         for (n=0; n<data.length; n++) {
-    //             tablerow = `<tr><td class="addr" id="addr_${data[n].address}">${data[n].address}</td>\
-    //                             <td class ="val" id="value_${data[n].address}">${Number(data[n].value)}</td>\
-    //                             <td class="symbol" id="symbol_${data[n].address}">${data[n].symbol}</td>\
-    //                             <td class="desc" id="description_${data[n].address}">${data[n].description}</td></tr>`
-    //             document.getElementById('datatable').innerHTML += tablerow
-    //         }
 }
 
 function registers(data) {
@@ -52,7 +45,11 @@ function registers(data) {
 
         for (i=0; i<fields.length; i++) {
             td = document.createElement("td")
-            value = document.createTextNode(data[n][fields[i]])
+            if (fields[i] == "value" && data[n].type == "bitfield") {
+                value = document.createTextNode(data[n].bitfield)
+            } else {
+                value = document.createTextNode(data[n][fields[i]])
+            }
             td.appendChild(value)
             tablerow.appendChild(td)
         }
