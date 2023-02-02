@@ -26,16 +26,20 @@ function coils(data) {
 
 function registers(data) {
     console.log(`${timeStamp()} Filling register data...`)
-    document.getElementById('datatable').innerHTML = "";
+    datable = document.getElementById('datatable').innerHTML
+
     for (n=0; n<data.length; n++) {
-        tablerow = `<tr><td class="addr" id="addr_${data[n].address}">${data[n].address}</td>\
-                        <td class ="val" id="value_${data[n].address}">${data[n].value}</td>\
-                        <td class="symbol" id="symbol_${data[n].address}">${data[n].symbol}</td>\
-                        <td class="desc" id="description_${data[n].address}">${data[n].description}</td></tr>`
-        document.getElementById('datatable').innerHTML += tablerow
-        if (data[n].type == "bitfield") {
-            document.getElementById(`value_${data[n].address}`).innerHTML = data[n].bitfield
+        tablerow = document.createElement("tr")
+        fields = ["address", "value", "symbol", "description"]
+
+        for (i=0; i<fields.length; i++) {
+            td = document.createElement("td")
+            value = document.createTextNode(data[n][fields[i]])
+            td.appendChild(value)
+            tablerow.appendChild(td)
         }
+
+        datatable.appendChild(tablerow)
     }
     console.log(`${timeStamp()} Done.`)
 }
