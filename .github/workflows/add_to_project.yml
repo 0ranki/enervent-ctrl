@@ -1,5 +1,5 @@
 name: Add issues to project
-uses: 
+
 on:
   issues:
     types:
