@@ -30,7 +30,9 @@ function coils(data) {
 				td.appendChild(value)
 				tablerow.appendChild(td)
 			}
-
+			if (data[n].reserved) {
+				tablerow.className = "reserved"
+			}
 			datatable.appendChild(tablerow)
 		}
 	} else {
@@ -61,7 +63,9 @@ function registers(data) {
 				td.appendChild(value)
 				tablerow.appendChild(td)
 			}
-
+			if (data[n].reserved) {
+				tablerow.className = "reserved"
+			}
 			datatable.appendChild(tablerow)
 		}
 		console.log(`${timeStamp()} Done.`)
@@ -120,3 +124,19 @@ function getData() {
     // There's no need to update exactly every 5 seconds, the skew is fine
     setTimeout(getData, 5*1000);
 }
+
+// Show or hide rows for "reserved" values when clicking the checkbox
+incl_res = document.getElementById("incl_res")
+incl_res.addEventListener("change", (event) => {
+	reservedRows = document.getElementsByClassName("reserved")
+	if (event.currentTarget.checked) {
+		for (i=0; i<reservedRows.length; i++) {
+			reservedRows[i].hidden = true
+		}
+	} else {
+		for (i=0; i<reservedRows.length; i++) {
+			reservedRows[i].hidden = false
+		}
+	}
+});
+

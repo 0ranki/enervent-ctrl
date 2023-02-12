@@ -2,15 +2,16 @@
 <html lang="en">
 <head>
     <link rel="stylesheet" href="/css/tabledata.css">
-    <script src="/js/tabledata.js"></script>
     <meta charset="UTF-8">
     <title id="title">Enervent Pingvin Kotilämpö</title>
 </head>
 <body onload="getData()">
     <table id="data">
-        <caption><span id="caption">Holding register values at </span><span id="time"></span></caption>
+        <caption><span id="caption">Holding register values at </span><span id="time"></span><br>
+		<input type="checkbox" id="incl_res">Include reserved</caption>
         <thead><th>Address</th><th>Value</th><th>Symbol</th><th>Description</th></thead>
         <tbody id="datatable"></tbody>
     </table>
 </body>
 </html>
+<script src="/js/tabledata.js"></script>
