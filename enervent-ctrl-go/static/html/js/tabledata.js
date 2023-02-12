@@ -14,49 +14,67 @@ function timeStamp() {
 }
 
 function coils(data) {
-    datable = document.getElementById('datatable')
+    if (document.getElementById("coilval_0") == null) {
+		for (n=0; n<data.length; n++) {
+			tablerow = document.createElement("tr")
+			fields = ["address", "value", "symbol", "description"]
 
-    for (n=0; n<data.length; n++) {
-        tablerow = document.createElement("tr")
-        fields = ["address", "value", "symbol", "description"]
+			for (i=0; i<fields.length; i++) {
+				td = document.createElement("td")
+				if (fields[i] == "value") {
+					value = document.createTextNode(Number(data[n][fields[i]]))
+					td.id = "coilval_" + n;
+				} else {
+					value = document.createTextNode(data[n][fields[i]])
+				}
+				td.appendChild(value)
+				tablerow.appendChild(td)
+			}
 
-        for (i=0; i<fields.length; i++) {
-            td = document.createElement("td")
-            if (fields[i] == "value") {
-                value = document.createTextNode(Number(data[n][fields[i]]))
-            } else {
-                value = document.createTextNode(data[n][fields[i]])
-            }
-            td.appendChild(value)
-            tablerow.appendChild(td)
-        }
-
-        datatable.appendChild(tablerow)
-    }
+			datatable.appendChild(tablerow)
+		}
+	} else {
+		for (n=0; n<data.length; n++) {
+			coilval = document.getElementById("coilval_" + n);
+			coilval.innerHTML = Number(data[n]["value"])
+		}
+	}
 }
 
 function registers(data) {
-    console.log(`${timeStamp()} Filling register data...`)
-    datable = document.getElementById('datatable')
+	if (document.getElementById("regval_0") == null) {
+		console.log(`${timeStamp()} Filling register data...`)
+		for (n=0; n<data.length; n++) {
+			tablerow = document.createElement("tr")
+			fields = ["address", "value", "symbol", "description"]
 
-    for (n=0; n<data.length; n++) {
-        tablerow = document.createElement("tr")
-        fields = ["address", "value", "symbol", "description"]
+			for (i=0; i<fields.length; i++) {
+				td = document.createElement("td")
+				if (fields[i] == "value" && data[n].type == "bitfield") {
+					value = document.createTextNode(data[n].bitfield)
+				} else {
+					value = document.createTextNode(data[n][fields[i]])
+				}
+				if (fields[i] == "value") {
+					td.id = "regval_" + n;
+				}
+				td.appendChild(value)
+				tablerow.appendChild(td)
+			}
 
-        for (i=0; i<fields.length; i++) {
-            td = document.createElement("td")
-            if (fields[i] == "value" && data[n].type == "bitfield") {
-                value = document.createTextNode(data[n].bitfield)
-            } else {
-                value = document.createTextNode(data[n][fields[i]])
-            }
-            td.appendChild(value)
-            tablerow.appendChild(td)
-        }
-
-        datatable.appendChild(tablerow)
-    }
-    console.log(`${timeStamp()} Done.`)
+			datatable.appendChild(tablerow)
+		}
+		console.log(`${timeStamp()} Done.`)
+	} else {
+		for (n=0; n<data.length; n++) {
+			regval = document.getElementById("regval_" + n);
+			if (data[n].type == "bitfield") {
+				regval.innerHTML = data[n]["bitfield"]
+			} else {
+				regval.innerHTML = data[n]["value"]
+			}
+		}
+	}	
 }
 
 function getData() {
