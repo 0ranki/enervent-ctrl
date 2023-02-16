@@ -32,6 +32,9 @@ function coils(data) {
 			}
 			if (data[n].reserved) {
 				tablerow.className = "reserved"
+				if (!document.getElementById("incl_res").checked) {
+					tablerow.hidden = true
+				}
 			}
 			datatable.appendChild(tablerow)
 		}
@@ -65,6 +68,9 @@ function registers(data) {
 			}
 			if (data[n].reserved) {
 				tablerow.className = "reserved"
+				if (!document.getElementById("incl_res").checked) {
+					tablerow.hidden = true
+				}
 			}
 			datatable.appendChild(tablerow)
 		}
@@ -129,7 +135,7 @@ function getData() {
 incl_res = document.getElementById("incl_res")
 incl_res.addEventListener("change", (event) => {
 	reservedRows = document.getElementsByClassName("reserved")
-	if (event.currentTarget.checked) {
+	if (!event.currentTarget.checked) {
 		for (i=0; i<reservedRows.length; i++) {
 			reservedRows[i].hidden = true
 		}
