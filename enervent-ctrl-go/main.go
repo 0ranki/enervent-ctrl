@@ -17,7 +17,7 @@ import (
 var static embed.FS
 
 var (
-	version = "0.0.3"
+	version = "0.0.4"
 	pingvin pingvinKL.PingvinKL
 	DEBUG   = false
 )
@@ -38,10 +38,16 @@ func registers(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func status(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(pingvin.Status)
+}
+
 func listen() {
 	log.Println("Starting pingvinAPI...")
 	http.HandleFunc("/api/v1/coils/", coils)
 	http.HandleFunc("/api/v1/registers/", registers)
+	http.HandleFunc("/api/v1/status", status)
 	html, err := fs.Sub(static, "static/html")
 	if err != nil {
 		log.Fatal(err)

@@ -2,6 +2,7 @@ package pingvinKL
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -44,15 +45,15 @@ type pingvinRegister struct {
 }
 
 type pingvinVentInfo struct {
-	supplyHeated    int `json:"supply_heated"`
-	supplyHrc       int `json:"supply_hrc"`
-	supplyIntake    int `json:"supply_intake"`
-	supplyIntake24h int `json:"supply_intake_24h"`
-	supplyHum       int `json:"supply_hum"`
-	extractIntake   int `json:"extract_intake"`
-	extractHrc      int `json:"extract_hrc"`
-	extractHum      int `json:"extract_hum"`
-	extractHum48h   int `json:"extract_hum_48h"`
+	SupplyHeated    int `json:"supply_heated"`
+	SupplyHrc       int `json:"supply_hrc"`
+	SupplyIntake    int `json:"supply_intake"`
+	SupplyIntake24h int `json:"supply_intake_24h"`
+	SupplyHum       int `json:"supply_hum"`
+	ExtractIntake   int `json:"extract_intake"`
+	ExtractHrc      int `json:"extract_hrc"`
+	ExtractHum      int `json:"extract_hum"`
+	ExtractHum48h   int `json:"extract_hum_48h"`
 }
 
 type pingvinStatus struct {
@@ -82,11 +83,14 @@ func newCoil(address string, symbol string, description string) pingvinCoil {
 func newRegister(address, symbol, typ, multiplier, description string) pingvinRegister {
 	addr, err := strconv.Atoi(address)
 	if err != nil {
-		log.Fatal("newRegister: Atio: ")
+		log.Fatal("newRegister: Atoi(address): ", err)
 	}
-	multipl, err := strconv.Atoi(multiplier)
-	if err != nil {
-		log.Fatal("newRegister: Atio: ")
+	multipl := 1
+	if len(multiplier) > 0 {
+		multipl, err = strconv.Atoi(multiplier)
+		if err != nil {
+			log.Fatal("newRegister: Atoi(multiplier): ", err)
+		}
 	}
 	reserved := symbol == "Reserved" && description == "Reserved"
 	register := pingvinRegister{addr, symbol, 0, "00000000", typ, description, reserved, multipl}
@@ -126,7 +130,7 @@ func (p PingvinKL) getHandler() *modbus.RTUClientHandler {
 	return handler
 }
 
-func (p PingvinKL) updateCoils() {
+func (p *PingvinKL) updateCoils() {
 	handler := p.getHandler()
 	p.buslock.Lock()
 	err := handler.Connect()
@@ -159,7 +163,7 @@ func (p PingvinKL) updateCoils() {
 	}
 }
 
-func (p PingvinKL) updateRegisters() {
+func (p *PingvinKL) updateRegisters() {
 	handler := p.getHandler()
 	p.buslock.Lock()
 	err := handler.Connect()
@@ -214,9 +218,10 @@ func (p PingvinKL) updateRegisters() {
 	p.buslock.Unlock()
 }
 
-func (p PingvinKL) Update() {
+func (p *PingvinKL) Update() {
 	p.updateCoils()
 	p.updateRegisters()
+	p.populateStatus()
 }
 
 func (p PingvinKL) ReadCoil(n uint16) []byte {
@@ -235,6 +240,19 @@ func (p PingvinKL) ReadCoil(n uint16) []byte {
 	}
 	p.Coils[n].Value = results[0] == 1
 	return results
+}
+
+func (p *PingvinKL) populateStatus() {
+	hpct := p.Registers[49].Value / p.Registers[49].Multiplier
+	log.Println(hpct)
+	if hpct > 100 {
+		p.Status.HeaterPct = hpct - 100
+		p.Status.HrcPct = 100
+	} else {
+		p.Status.HeaterPct = 0
+		p.Status.HrcPct = hpct
+	}
+	json.NewEncoder(log.Writer()).Encode(p.Status)
 }
 
 // create a PingvinKL struct, read coils and registers from CSVs
