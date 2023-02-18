@@ -38,6 +38,33 @@ type pingvinRegister struct {
 	Type        string `json:"type"`
 	Description string `json:"description"`
 	Reserved    bool   `json:"reserved"`
+	Multiplier  int    `json:"multiplier"`
+}
+
+type pingvinVentInfo struct {
+	supplyHeated    int `json:"supply_heated"`
+	supplyHrc       int `json:"supply_hrc"`
+	supplyIntake    int `json:"supply_intake"`
+	supplyIntake24h int `json:"supply_intake_24h"`
+	supplyHum       int `json:"supply_hum"`
+	extractIntake   int `json:"extract_intake"`
+	extractHrc      int `json:"extract_hrc"`
+	extractHum      int `json:"extract_hum"`
+	extractHum48h   int `json:"extract_hum_48h"`
+}
+
+type PingvinStatus struct {
+	HeaterPct        int             `json:"heater_pct"`
+	HrcPct           int             `json:"hrc_pct"`
+	TempSetting      int             `json:"temp_setting"`
+	FanPct           int             `json:"fan_pct"`
+	VentInfo         pingvinVentInfo `json:"vent_info"`
+	HrcEffIn         int             `json:"hrc_efficiency_in"`
+	HrcEffEx         int             `json:"hrc_efficiency_ex"`
+	OpMode           string          `json:"op_mode"`
+	DaysUntilService int             `json:"days_until_service"`
+	Uptime           string          `json:"uptime"`
+	SystemTime       string          `json:"system_time"`
 }
 
 func newCoil(address string, symbol string, description string) pingvinCoil {
