@@ -24,9 +24,11 @@ type pingvinCoil struct {
 
 // unit modbus data
 type PingvinKL struct {
-	Coils     []pingvinCoil
-	Registers []pingvinRegister
-	buslock   *sync.Mutex
+	Coils      []pingvinCoil
+	Registers  []pingvinRegister
+	Status     pingvinStatus
+	buslock    *sync.Mutex
+	statuslock *sync.Mutex
 }
 
 // single register data
@@ -53,7 +55,7 @@ type pingvinVentInfo struct {
 	extractHum48h   int `json:"extract_hum_48h"`
 }
 
-type PingvinStatus struct {
+type pingvinStatus struct {
 	HeaterPct        int             `json:"heater_pct"`
 	HrcPct           int             `json:"hrc_pct"`
 	TempSetting      int             `json:"temp_setting"`
@@ -77,13 +79,17 @@ func newCoil(address string, symbol string, description string) pingvinCoil {
 	return coil
 }
 
-func newRegister(address string, symbol string, typ string, description string) pingvinRegister {
+func newRegister(address, symbol, typ, multiplier, description string) pingvinRegister {
 	addr, err := strconv.Atoi(address)
 	if err != nil {
 		log.Fatal("newRegister: Atio: ")
 	}
+	multipl, err := strconv.Atoi(multiplier)
+	if err != nil {
+		log.Fatal("newRegister: Atio: ")
+	}
 	reserved := symbol == "Reserved" && description == "Reserved"
-	register := pingvinRegister{addr, symbol, 0, "00000000", typ, description, reserved}
+	register := pingvinRegister{addr, symbol, 0, "00000000", typ, description, reserved, multipl}
 	return register
 }
 
@@ -245,7 +251,7 @@ func New() PingvinKL {
 	registerData := readCsvLines("registers.csv")
 	for i := 0; i < len(registerData); i++ {
 		pingvin.Registers = append(pingvin.Registers,
-			newRegister(registerData[i][0], registerData[i][1], registerData[i][2], registerData[i][6]))
+			newRegister(registerData[i][0], registerData[i][1], registerData[i][2], registerData[i][3], registerData[i][6]))
 	}
 	log.Println("Parsed", len(pingvin.Registers), "registers")
 	return pingvin
