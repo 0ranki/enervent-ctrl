@@ -252,6 +252,23 @@ func (p *PingvinKL) populateStatus() {
 		p.Status.HeaterPct = 0
 		p.Status.HrcPct = hpct
 	}
+	p.Status.TempSetting = p.Registers[135].Value / p.Registers[135].Multiplier
+	p.Status.FanPct = p.Registers[774].Value / p.Registers[774].Multiplier
+	p.Status.VentInfo.SupplyHeated = p.Registers[8].Value / p.Registers[8].Multiplier
+	p.Status.VentInfo.SupplyHrc = p.Registers[7].Value / p.Registers[7].Multiplier
+	p.Status.VentInfo.SupplyIntake = p.Registers[6].Value / p.Registers[6].Multiplier
+	p.Status.VentInfo.SupplyIntake24h = p.Registers[134].Value / p.Registers[134].Multiplier
+	p.Status.VentInfo.SupplyHum = p.Registers[36].Value / p.Registers[46].Multiplier
+	p.Status.VentInfo.ExtractIntake = p.Registers[10].Value / p.Registers[10].Multiplier
+	p.Status.VentInfo.ExtractHrc = p.Registers[9].Value / p.Registers[9].Multiplier
+	p.Status.VentInfo.ExtractHum = p.Registers[28].Value / p.Registers[28].Multiplier
+	p.Status.VentInfo.ExtractHum48h = p.Registers[50].Value / p.Registers[50].Multiplier
+	p.Status.HrcEffIn = p.Registers[29].Value / p.Registers[29].Multiplier
+	p.Status.HrcEffEx = p.Registers[30].Value / p.Registers[30].Multiplier
+	// TODO: Operating mode in separate function
+	// TODO: Alarms, n of alarms
+	p.Status.DaysUntilService = p.Registers[538].Value / p.Registers[538].Multiplier
+	// TODO: Uptime & date in separate functions
 	json.NewEncoder(log.Writer()).Encode(p.Status)
 }
 
