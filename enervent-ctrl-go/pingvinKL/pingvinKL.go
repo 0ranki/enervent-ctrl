@@ -2,7 +2,6 @@ package pingvinKL
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -30,6 +29,7 @@ type PingvinKL struct {
 	Status     pingvinStatus
 	buslock    *sync.Mutex
 	statuslock *sync.Mutex
+	debug      bool
 }
 
 // single register data
@@ -182,9 +182,16 @@ func (p *PingvinKL) updateRegisters() {
 		if regs-k < 125 {
 			r = regs - k
 		}
-		results, err := client.ReadHoldingRegisters(uint16(k), uint16(r))
-		if err != nil {
-			log.Fatal("updateRegisters: client.ReadCoils: ", err)
+		results := []byte{}
+		for retries := 0; retries < 5; retries++ {
+			results, err = client.ReadHoldingRegisters(uint16(k), uint16(r))
+			if len(results) > 0 {
+				break
+			} else if retries == 4 {
+				log.Fatal("updateRegisters: client.ReadHoldingRegisters: ", err)
+			} else if err != nil {
+				log.Println("WARNING: updateRegisters: client.ReadHoldingRegisters: ", err)
+			}
 		}
 		// The values represent 16 bit integers, but modbus works with bytes
 		// Each even byte of the returned []byte is the 8 MSBs of a new 16-bit
@@ -244,7 +251,6 @@ func (p PingvinKL) ReadCoil(n uint16) []byte {
 
 func (p *PingvinKL) populateStatus() {
 	hpct := p.Registers[49].Value / p.Registers[49].Multiplier
-	log.Println(hpct)
 	if hpct > 100 {
 		p.Status.HeaterPct = hpct - 100
 		p.Status.HrcPct = 100
@@ -269,7 +275,6 @@ func (p *PingvinKL) populateStatus() {
 	// TODO: Alarms, n of alarms
 	p.Status.DaysUntilService = p.Registers[538].Value / p.Registers[538].Multiplier
 	// TODO: Uptime & date in separate functions
-	json.NewEncoder(log.Writer()).Encode(p.Status)
 }
 
 func (p *PingvinKL) Monitor(interval int) {
@@ -280,8 +285,9 @@ func (p *PingvinKL) Monitor(interval int) {
 }
 
 // create a PingvinKL struct, read coils and registers from CSVs
-func New() PingvinKL {
+func New(debug bool) PingvinKL {
 	pingvin := PingvinKL{}
+	pingvin.debug = debug
 	pingvin.buslock = &sync.Mutex{}
 	log.Println("Parsing coil data...")
 	coilData := readCsvLines("coils.csv")
