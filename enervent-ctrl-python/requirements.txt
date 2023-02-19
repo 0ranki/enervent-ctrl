@@ -7,5 +7,5 @@ MarkupSafe==2.1.1
 minimalmodbus==2.0.1
 pyserial==3.5
 waitress==2.1.2
-Werkzeug==2.2.2
+Werkzeug==2.2.3
 zipp==3.11.0
