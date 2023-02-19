@@ -7,7 +7,7 @@ views:
           - entity: sensor.enervent_pingvin_lammontalteenotto
           - entity: sensor.enervent_pingvin_lampotila_asetus
           - entity: sensor.enervent_pingvin_kiertoilmapuhallin
-          - entity: sensor.enervent_pingvin_lto_seuraava_huolto
+          - entity: sensor.enervent_pingvin_seuraava_huolto
         title: Enervent Pingvin
       - type: entities
         entities:

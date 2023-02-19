@@ -26,7 +26,7 @@ rest:
         value_template: "{{ value_json['hrc_efficiency_ex'] }}"
         unit_of_measurement: "%"
         icon: mdi:recycle
-      - name: "Enervent Pingvin LTO seuraava huolto"
+      - name: "Enervent Pingvin seuraava huolto"
         value_template: "{{ value_json['days_until_service'] }}"
         unit_of_measurement: "pv"
         icon: mdi:calendar
