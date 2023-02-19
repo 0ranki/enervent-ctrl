@@ -93,7 +93,7 @@ func newRegister(address, symbol, typ, multiplier, description string) pingvinRe
 		}
 	}
 	reserved := symbol == "Reserved" && description == "Reserved"
-	register := pingvinRegister{addr, symbol, 0, "00000000", typ, description, reserved, multipl}
+	register := pingvinRegister{addr, symbol, 0, "0000000000000000", typ, description, reserved, multipl}
 	return register
 }
 
@@ -215,7 +215,15 @@ func (p *PingvinKL) updateRegisters() {
 				}
 				if p.Registers[k].Type == "bitfield" {
 					p.Registers[k].Value = int(value)
-					p.Registers[k].Bitfield = fmt.Sprintf("%08b", uvalue)
+					// p.Registers[k].Bitfield = fmt.Sprintf("%16b", uvalue)
+					p.Registers[k].Bitfield = ""
+					for i := 16; i >= 0; i-- {
+						x := 0
+						if p.Registers[k].Value>>i&0x1 == 1 {
+							x = 1
+						}
+						p.Registers[k].Bitfield = fmt.Sprintf("%s%s", p.Registers[k].Bitfield, strconv.Itoa(x))
+					}
 				}
 				k++
 			}
@@ -271,10 +279,40 @@ func (p *PingvinKL) populateStatus() {
 	p.Status.VentInfo.ExtractHum48h = p.Registers[50].Value / p.Registers[50].Multiplier
 	p.Status.HrcEffIn = p.Registers[29].Value / p.Registers[29].Multiplier
 	p.Status.HrcEffEx = p.Registers[30].Value / p.Registers[30].Multiplier
-	// TODO: Operating mode in separate function
+	p.Status.OpMode = parseStatus(p.Registers[44].Value)
 	// TODO: Alarms, n of alarms
 	p.Status.DaysUntilService = p.Registers[538].Value / p.Registers[538].Multiplier
 	// TODO: Uptime & date in separate functions
+}
+
+func parseStatus(value int) string {
+	val := int16(value)
+	pingvinStatuses := []string{
+		"Normal",
+		"Max heating",
+		"Max cooling",
+		"Stopped by alarm",
+		"Stopped by user",
+		"Away",
+		"reserved",
+		"Temperature boost",
+		"CO2 boost",
+		"RH boost",
+		"Manual boost",
+		"Overpressure",
+		"Cooker hood mode",
+		"Central vac mode",
+		"Electric heater cooloff",
+		"Summer night cooling",
+		"HRC defrost",
+	}
+	for i := 1; i <= 16; i++ {
+		if val>>i&0x1 == 1 {
+			return pingvinStatuses[i]
+		}
+	}
+	return "Normal"
+
 }
 
 func (p *PingvinKL) Monitor(interval int) {
