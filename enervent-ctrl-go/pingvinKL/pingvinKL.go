@@ -272,6 +272,13 @@ func (p *PingvinKL) populateStatus() {
 	json.NewEncoder(log.Writer()).Encode(p.Status)
 }
 
+func (p *PingvinKL) Monitor(interval int) {
+	for {
+		time.Sleep(time.Duration(interval) * time.Second)
+		p.Update()
+	}
+}
+
 // create a PingvinKL struct, read coils and registers from CSVs
 func New() PingvinKL {
 	pingvin := PingvinKL{}

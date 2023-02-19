@@ -64,5 +64,6 @@ func main() {
 	log.Println("enervent-ctrl version", version)
 	pingvin = pingvinKL.New()
 	pingvin.Update()
+	go pingvin.Monitor(15)
 	listen()
 }
