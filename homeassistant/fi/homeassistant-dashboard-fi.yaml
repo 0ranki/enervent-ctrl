@@ -3,6 +3,7 @@ views:
     cards:
       - type: entities
         entities:
+          - entity: sensor.enervent_pingvin_tila
           - entity: sensor.enervent_pingvin_lammitys
           - entity: sensor.enervent_pingvin_lammontalteenotto
           - entity: sensor.enervent_pingvin_lampotila_asetus

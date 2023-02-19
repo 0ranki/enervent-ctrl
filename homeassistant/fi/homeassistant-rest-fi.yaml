@@ -2,6 +2,9 @@ rest:
   - resource: http://IP_ADDRESS:8888/api/v1/status
     scan_interval: 15
     sensor:
+      - name: "Enervent Pingvin tila"
+        value_template: "{{ value_json['op_mode'] }}"
+        icon: mdi:information
       - name: "Enervent Pingvin lämmitys"
         value_template: "{{ value_json['heater_pct'] }}"
         unit_of_measurement: "%"
