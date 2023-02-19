@@ -1,0 +1,54 @@
+rest:
+  - resource: http://IP_ADDRESS:8888/api/v1/status
+    scan_interval: 15
+    sensor:
+      - name: "Enervent Pingvin heating"
+        value_template: "{{ value_json['heater_pct'] }}"
+        unit_of_measurement: "%"
+        icon: mdi:heating-coil
+      - name: "Enervent Pingvin heat recovery"
+        value_template: "{{ value_json['hrc_pct'] }}"
+        unit_of_measurement: "%"
+        icon: mdi:recycle
+      - name: "Enervent Pingvin temperature setpoint"
+        value_template: "{{ value_json['temp_setting'] }}"
+        unit_of_measurement: "°C"
+        icon: mdi:thermometer-check
+      - name: "Enervent Pingvin circulation fan"
+        value_template: "{{ value_json['fan_pct'] }}"
+        unit_of_measurement: "%"
+        icon: mdi:fan
+      - name: "Enervent Pingvin HRC efficiency intake"
+        value_template: "{{ value_json['hrc_efficiency_in'] }}"
+        unit_of_measurement: "%"
+        icon: mdi:recycle
+      - name: "Enervent Pingvin HRC efficiency exhaust"
+        value_template: "{{ value_json['hrc_efficiency_ex'] }}"
+        unit_of_measurement: "%"
+        icon: mdi:recycle
+      - name: "Enervent Pingvin next maintenance"
+        value_template: "{{ value_json['days_until_service'] }}"
+        unit_of_measurement: "pv"
+        icon: mdi:calendar
+      - name: "Enervent Pingvin supply air"
+        value_template: "{{ value_json['vent_info']['supply_heated'] }}"
+        unit_of_measurement: "°C" 
+      - name: "Enervent Pingvin supply air HRC"
+        value_template: "{{ value_json['vent_info']['supply_hrc'] }}"
+        unit_of_measurement: "°C" 
+      - name: "Enervent Pingvin outside air"
+        value_template: "{{ value_json['vent_info']['supply_intake'] }}"
+        unit_of_measurement: "°C" 
+      - name: "Enervent Pingvin outside air 24h"
+        value_template: "{{ value_json['vent_info']['supply_intake_24h'] }}"
+        unit_of_measurement: "°C" 
+      - name: "Enervent Pingvin outside air humidity"
+        value_template: "{{ value_json['vent_info']['supply_hum'] }}"
+        unit_of_measurement: "%"
+        icon: mdi:water-percent
+      - name: "Enervent Pingvin extract air"
+        value_template: "{{ value_json['vent_info']['extract_intake'] }}"
+        unit_of_measurement: "°C" 
+      - name: "Enervent Pingvin waste air"
+        value_template: "{{ value_json['vent_info']['extract_hrc'] }}"
+        unit_of_measurement: "°C" 

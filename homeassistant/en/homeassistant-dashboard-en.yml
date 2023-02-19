@@ -1,0 +1,24 @@
+views:
+  - title: Home
+    cards:
+      - type: entities
+        entities:
+          - entity: sensor.enervent_pingvin_heating
+          - entity: sensor.enervent_pingvin_heat_recovery
+          - entity: sensor.enervent_pingvin_temperature_setpoint
+          - entity: sensor.enervent_pingvin_circulation_fan
+          - entity: sensor.enervent_pingvin_next_maintenance
+        title: Enervent Pingvin
+      - type: entities
+        entities:
+          - entity: sensor.enervent_pingvin_outside_air
+          - entity: sensor.enervent_pingvin_outside_air_24h
+          - entity: sensor.enervent_pingvin_supply_air_hrc
+          - entity: sensor.enervent_pingvin_outside_air_humidity
+          - entity: sensor.enervent_pingvin_supply_air
+          - entity: sensor.enervent_pingvin_extract_air
+          - entity: sensor.enervent_pingvin_waste_air
+          - entity: sensor.enervent_pingvin_extract_air_humidity
+          - entity: sensor.enervent_pingvin_hrc_efficiency_intake
+          - entity: sensor.enervent_pingvin_hrc_efficiency_exhaust
+        title: Enervent Pingvin measurements
