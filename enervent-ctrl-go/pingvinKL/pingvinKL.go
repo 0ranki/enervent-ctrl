@@ -290,9 +290,8 @@ func (p *PingvinKL) populateStatus() {
 func parseStatus(value int) string {
 	val := int16(value)
 	pingvinStatuses := []string{
-		"Normal",
-		"Max heating",
 		"Max cooling",
+		"Max heating",
 		"Stopped by alarm",
 		"Stopped by user",
 		"Away",
@@ -308,7 +307,7 @@ func parseStatus(value int) string {
 		"Summer night cooling",
 		"HRC defrost",
 	}
-	for i := 1; i <= 16; i++ {
+	for i := 0; i < 15; i++ {
 		if val>>i&0x1 == 1 {
 			return pingvinStatuses[i]
 		}

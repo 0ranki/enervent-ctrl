@@ -1,7 +1,7 @@
 0;COIL_STOP;Stop the machine
 1;COIL_AWAY;Set the machine to away mode
 2;COIL_AWAYL;Set the machine to away long mode
-3;-;-
+3;COIL_OVERPR;Set the machine to overpressure mode
 4;-;-
 5;-;-
 6;COIL_MAX_H;Force the machine to heat at maximum effect.
