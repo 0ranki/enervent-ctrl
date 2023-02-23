@@ -45,29 +45,30 @@ type pingvinRegister struct {
 }
 
 type pingvinVentInfo struct {
-	SupplyHeated    int `json:"supply_heated"`
-	SupplyHrc       int `json:"supply_hrc"`
-	SupplyIntake    int `json:"supply_intake"`
-	SupplyIntake24h int `json:"supply_intake_24h"`
-	SupplyHum       int `json:"supply_hum"`
-	ExtractIntake   int `json:"extract_intake"`
-	ExtractHrc      int `json:"extract_hrc"`
-	ExtractHum      int `json:"extract_hum"`
-	ExtractHum48h   int `json:"extract_hum_48h"`
+	Roomtemp1       int `json:"room_temp1"`        // Room temperature at panel 1
+	SupplyHeated    int `json:"supply_heated"`     // Temperature of supply air after heating
+	SupplyHrc       int `json:"supply_hrc"`        // Temperature of supply air after heat recovery
+	SupplyIntake    int `json:"supply_intake"`     // Temperature of outside air at device
+	SupplyIntake24h int `json:"supply_intake_24h"` // 24h avg of outside air humidity
+	SupplyHum       int `json:"supply_hum"`        // Supply air humidity
+	ExtractIntake   int `json:"extract_intake"`    // Temperature of extract air
+	ExtractHrc      int `json:"extract_hrc"`       // Temperature of extract air after heat recovery
+	ExtractHum      int `json:"extract_hum"`       // Relative humidity of extract air
+	ExtractHum48h   int `json:"extract_hum_48h"`   // 48h avg extract air humidity
 }
 
 type pingvinStatus struct {
-	HeaterPct        int             `json:"heater_pct"`
-	HrcPct           int             `json:"hrc_pct"`
-	TempSetting      int             `json:"temp_setting"`
-	FanPct           int             `json:"fan_pct"`
-	VentInfo         pingvinVentInfo `json:"vent_info"`
-	HrcEffIn         int             `json:"hrc_efficiency_in"`
-	HrcEffEx         int             `json:"hrc_efficiency_ex"`
-	OpMode           string          `json:"op_mode"`
-	DaysUntilService int             `json:"days_until_service"`
-	Uptime           string          `json:"uptime"`
-	SystemTime       string          `json:"system_time"`
+	HeaterPct        int             `json:"heater_pct"`         // After heater valve position
+	HrcPct           int             `json:"hrc_pct"`            // Heat recovery turn speed
+	TempSetting      int             `json:"temp_setting"`       // Requested room temperature
+	FanPct           int             `json:"fan_pct"`            // Circulation fan setting
+	VentInfo         pingvinVentInfo `json:"vent_info"`          // Measurements
+	HrcEffIn         int             `json:"hrc_efficiency_in"`  // Calculated HRC efficiency, intake
+	HrcEffEx         int             `json:"hrc_efficiency_ex"`  // Calculated HRC efficiency, extract
+	OpMode           string          `json:"op_mode"`            // Current operating mode, text representation
+	DaysUntilService int             `json:"days_until_service"` // Days until next filter service
+	Uptime           string          `json:"uptime"`             // Unit uptime
+	SystemTime       string          `json:"system_time"`        // Time and date in unit
 }
 
 func newCoil(address string, symbol string, description string) pingvinCoil {
@@ -268,6 +269,7 @@ func (p *PingvinKL) populateStatus() {
 	}
 	p.Status.TempSetting = p.Registers[135].Value / p.Registers[135].Multiplier
 	p.Status.FanPct = p.Registers[774].Value / p.Registers[774].Multiplier
+	p.Status.VentInfo.Roomtemp1 = p.Registers[1].Value / p.Registers[1].Multiplier
 	p.Status.VentInfo.SupplyHeated = p.Registers[8].Value / p.Registers[8].Multiplier
 	p.Status.VentInfo.SupplyHrc = p.Registers[7].Value / p.Registers[7].Multiplier
 	p.Status.VentInfo.SupplyIntake = p.Registers[6].Value / p.Registers[6].Multiplier
