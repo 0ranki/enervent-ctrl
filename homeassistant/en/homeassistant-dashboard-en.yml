@@ -4,6 +4,7 @@ views:
       - type: entities
         entities:
           - entity: sensor.enervent_pingvin_mode
+          - entity: sensor.enervent_pingvin_room_temperature_1
           - entity: sensor.enervent_pingvin_heating
           - entity: sensor.enervent_pingvin_heat_recovery
           - entity: sensor.enervent_pingvin_temperature_setpoint

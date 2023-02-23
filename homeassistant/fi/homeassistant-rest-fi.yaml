@@ -5,6 +5,9 @@ rest:
       - name: "Enervent Pingvin tila"
         value_template: "{{ value_json['op_mode'] }}"
         icon: mdi:information
+      - name: "Enervent Pingvin huonelämpötila 1"
+        value_template: "{{ value_json['vent_info']['room_temp1'] }}"
+        unit_of_measurement: "°C"
       - name: "Enervent Pingvin lämmitys"
         value_template: "{{ value_json['heater_pct'] }}"
         unit_of_measurement: "%"
