@@ -258,6 +258,35 @@ func (p PingvinKL) ReadCoil(n uint16) []byte {
 	return results
 }
 
+func (p *PingvinKL) WriteCoil(n uint16, val bool) bool {
+	handler := p.getHandler()
+	p.buslock.Lock()
+	err := handler.Connect()
+	if err != nil {
+		log.Println("WARNING: WriteCoil: failed to connect handler")
+		return false
+	}
+	defer handler.Close()
+	var value uint16 = 0
+	if val {
+		value = 0xff00
+	}
+	client := modbus.NewClient(handler)
+	results, err := client.WriteSingleCoil(n, value)
+	p.buslock.Unlock()
+	if err != nil {
+		log.Println("ERROR: WriteCoil: ", err)
+	}
+	if (val && results[0] == 255) || (!val && results[0] == 0) {
+		log.Println("WriteCoil: wrote coil", n, "to value", val)
+	} else {
+		log.Println("ERROR: WriteCoil: failed to write coil")
+		return false
+
+	}
+	return true
+}
+
 func (p *PingvinKL) populateStatus() {
 	hpct := p.Registers[49].Value / p.Registers[49].Multiplier
 	if hpct > 100 {
