@@ -348,7 +348,14 @@ func parseStatus(value int) string {
 func (p *PingvinKL) Monitor(interval int) {
 	for {
 		time.Sleep(time.Duration(interval) * time.Second)
+		if p.debug {
+			log.Println("DEBUG: Updating values")
+		}
 		p.Update()
+		if p.debug {
+			log.Println("DEBUG: coils:", p.Coils)
+			log.Println("DEBUG: registers:", p.Registers)
+		}
 	}
 }
 
