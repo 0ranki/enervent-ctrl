@@ -15,3 +15,6 @@ thead {
 td {
     padding: 2pt;
 }
+.highlightrow {
+    background-color: orangered;
+}

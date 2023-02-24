@@ -41,7 +41,14 @@ function coils(data) {
 	} else {
 		for (n=0; n<data.length; n++) {
 			coilval = document.getElementById("coilval_" + n);
+			oldval = coilval.innerHTML
 			coilval.innerHTML = Number(data[n]["value"])
+			if (oldval != coilval.innerHTML) {
+				coilval.className = "highlightrow"
+				// setTimeout(() => {coilval.className = ""}, 1000)
+			} else {
+				coilval.className = ""
+			}
 		}
 	}
 }
@@ -78,10 +85,17 @@ function registers(data) {
 	} else {
 		for (n=0; n<data.length; n++) {
 			regval = document.getElementById("regval_" + n);
+			oldval = regval.innerHTML
 			if (data[n].type == "bitfield") {
 				regval.innerHTML = data[n]["bitfield"]
 			} else {
 				regval.innerHTML = data[n]["value"]
+			}
+			if (oldval != regval.innerHTML) {
+				regval.className = "highlightrow"
+				// setTimeout(() => {regval.className = ""}, 1000)
+			} else {
+				regval.className = ""
 			}
 		}
 	}	
@@ -128,7 +142,7 @@ function getData() {
 
     // Using setTimeout instead of setInterval to avoid possible connection issues
     // There's no need to update exactly every 5 seconds, the skew is fine
-    setTimeout(getData, 5*1000);
+    setTimeout(getData, 2*1000);
 }
 
 // Show or hide rows for "reserved" values when clicking the checkbox
