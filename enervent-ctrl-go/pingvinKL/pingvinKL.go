@@ -71,6 +71,21 @@ type pingvinStatus struct {
 	SystemTime       string          `json:"system_time"`        // Time and date in unit
 }
 
+var (
+	// Mutually exclusive coils
+	// Thanks to https://github.com/Jalle19/eda-modbus-bridge
+	// 1 = Away mode
+	// 2 = Away long mode
+	// 3 = Overpressure
+	// 6 = Max heating
+	// 7 = Max cooling
+	// 10 = Manual boost
+	// 40 = Eco mode
+	// Only one of these should be enabled at a time
+
+	mutexcoils = []uint16{1, 2, 3, 6, 7, 10, 40}
+)
+
 func newCoil(address string, symbol string, description string) pingvinCoil {
 	addr, err := strconv.Atoi(address)
 	if err != nil {
@@ -287,6 +302,76 @@ func (p *PingvinKL) WriteCoil(n uint16, val bool) bool {
 	p.ReadCoil(n)
 	return true
 }
+
+func (p *PingvinKL) WriteCoils(startaddr uint16, quantity uint16, vals []bool) error {
+	handler := p.getHandler()
+	p.buslock.Lock()
+	err := handler.Connect()
+	if err != nil {
+		log.Println("WARNING: WriteCoils: failed to connect handler:", err)
+		return err
+	}
+	defer handler.Close()
+	p.updateCoils()
+	coilslice := p.Coils[startaddr:(startaddr + quantity)]
+	if len(coilslice) != len(vals) {
+		return fmt.Errorf("ERROR: WriteCoils: vals ([]bool) is not the correct length")
+	}
+	// Convert slice of booleans to byte slice
+	// representing individual bits
+	// modbus.NewClient.WriteMultipleCoils wants the individual
+	// bits in each byte "inverted", e.g. if you want to set 16 coils
+	// with values 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, the
+	// byte array needs to be [0x01,0x80] or [0b00000001, 0b10000000]
+	bits := make([]byte, (len(coilslice)+7)/8)
+	for i, coil := range coilslice {
+		if coil.Value || vals[i] {
+			// i/8 integer division, returns 0 for 0-7 etc.
+			// i%8 loops through 0-7
+			// If coil.Value or vals[i] is true, set i%8 + 1 least significant bit
+			// to 1 in bits[i/8]
+			// e.g. coil[19]:  (i/8 = 2, i%8 = 3)
+			// -> bits[2] = (bits[2] | 0b00000001 << 3)
+			// -> bits[2] = bits[2] | 0b00001000
+			// -> 4th least sign. bit is set to 1
+			bits[i/8] |= 0x01 << uint(i%8)
+		}
+		if !vals[i] {
+			// bits contains the current values. If vals[i] is false,
+			// the bit should be set to 0
+			// ^(1 << 3) = ^0b00001000 = 0b11110111
+			// 0b10101010 &| ^(1 << 3)
+			//     0b10101010
+			// AND 0b11110111
+			// ->  0b10100010
+			bits[i/8] &= ^(1 << uint(i%8))
+		}
+		if p.debug {
+			log.Println("index:", i/8, "value:", bits[i/8], "shift:", i%8)
+		}
+	}
+	log.Println(bits)
+	client := modbus.NewClient(handler)
+	results, err := client.WriteMultipleCoils(startaddr, quantity, bits)
+	p.buslock.Unlock()
+	if err != nil {
+		log.Println("ERROR: WriteCoils: ", err)
+		return err
+	}
+	log.Println(results)
+	return nil
+}
+
+// // TODO
+// func (p *PingvinKL) checkMutexCoils(addr uint16) {
+// 	for i := 0; i < len(mutexcoils); i++ {
+// 		if mutexcoils[i] == addr {
+// 			log.Println("Resetting mode coils")
+// 			// TODO
+// 			return
+// 		}
+// 	}
+// }
 
 func (p *PingvinKL) populateStatus() {
 	hpct := p.Registers[49].Value / p.Registers[49].Multiplier
