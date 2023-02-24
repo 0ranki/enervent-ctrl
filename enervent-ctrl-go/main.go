@@ -6,6 +6,8 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/0ranki/enervent-ctrl/enervent-ctrl-go/pingvinKL"
 )
@@ -24,8 +26,40 @@ var (
 
 func coils(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(pingvin.Coils)
+	pathparams := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/coils/"), "/")
+	if len(pathparams[0]) == 0 {
+		json.NewEncoder(w).Encode(pingvin.Coils)
+	} else if len(pathparams[0]) > 0 && r.Method == "GET" && len(pathparams) < 2 { // && r.Method == "POST"
+		intaddr, err := strconv.Atoi(pathparams[0])
+		if err != nil {
+			log.Println("ERROR: Could not parse coil address", pathparams[0])
+			log.Println(err)
+			return
+		}
+		pingvin.ReadCoil(uint16(intaddr))
+		json.NewEncoder(w).Encode(pingvin.Coils[intaddr])
+	} else if len(pathparams[0]) > 0 && r.Method == "POST" && len(pathparams) == 2 {
+		intaddr, err := strconv.Atoi(pathparams[0])
+		if err != nil {
+			log.Println("ERROR: Could not parse coil address", pathparams[0])
+			log.Println(err)
+			return
+		}
+		boolval, err := strconv.ParseBool(pathparams[1])
+		if err != nil {
+			log.Println("ERROR: Could not parse coil value", pathparams[1])
+			log.Println(err)
+			return
+		}
+		pingvin.WriteCoil(uint16(intaddr), boolval)
+		json.NewEncoder(w).Encode(pingvin.Coils[intaddr])
+	}
 }
+
+// func singlecoil(w http.ResponseWriter, r *http.Request) {
+// 	w.Header().Set("Content-Type", "application/json")
+
+// }
 
 func registers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")

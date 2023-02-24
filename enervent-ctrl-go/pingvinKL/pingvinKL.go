@@ -284,6 +284,7 @@ func (p *PingvinKL) WriteCoil(n uint16, val bool) bool {
 		return false
 
 	}
+	p.ReadCoil(n)
 	return true
 }
 

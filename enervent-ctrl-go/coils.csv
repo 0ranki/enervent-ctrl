@@ -9,7 +9,7 @@
 8;COIL_CO2_BOOST_EN;CO2 boosting enabled
 9;COIL_RH_BOOST_EN;Relative humidity boosting enabled
 10;COIL_M_BOOST;Boost the fanspeeds to 100% for a period of time
-11;COIL_TEMP_BOOST_EN;Temperature boosting enabled
+11;COIL_TEMP_BOOST_EN;Adaptive circulation fan speed enabled
 12;COIL_SNC;Summer night cooling (SNC) function enabled.
 13;-;-
 14;-;-
