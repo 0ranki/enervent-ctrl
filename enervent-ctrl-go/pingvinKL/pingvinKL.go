@@ -45,22 +45,22 @@ type pingvinRegister struct {
 }
 
 type pingvinVentInfo struct {
-	Roomtemp1       int `json:"room_temp1"`        // Room temperature at panel 1
-	SupplyHeated    int `json:"supply_heated"`     // Temperature of supply air after heating
-	SupplyHrc       int `json:"supply_hrc"`        // Temperature of supply air after heat recovery
-	SupplyIntake    int `json:"supply_intake"`     // Temperature of outside air at device
-	SupplyIntake24h int `json:"supply_intake_24h"` // 24h avg of outside air humidity
-	SupplyHum       int `json:"supply_hum"`        // Supply air humidity
-	ExtractIntake   int `json:"extract_intake"`    // Temperature of extract air
-	ExtractHrc      int `json:"extract_hrc"`       // Temperature of extract air after heat recovery
-	ExtractHum      int `json:"extract_hum"`       // Relative humidity of extract air
-	ExtractHum48h   int `json:"extract_hum_48h"`   // 48h avg extract air humidity
+	Roomtemp1       float32 `json:"room_temp1"`        // Room temperature at panel 1
+	SupplyHeated    float32 `json:"supply_heated"`     // Temperature of supply air after heating
+	SupplyHrc       float32 `json:"supply_hrc"`        // Temperature of supply air after heat recovery
+	SupplyIntake    float32 `json:"supply_intake"`     // Temperature of outside air at device
+	SupplyIntake24h float32 `json:"supply_intake_24h"` // 24h avg of outside air humidity
+	SupplyHum       float32 `json:"supply_hum"`        // Supply air humidity
+	ExtractIntake   float32 `json:"extract_intake"`    // Temperature of extract air
+	ExtractHrc      float32 `json:"extract_hrc"`       // Temperature of extract air after heat recovery
+	ExtractHum      float32 `json:"extract_hum"`       // Relative humidity of extract air
+	ExtractHum48h   float32 `json:"extract_hum_48h"`   // 48h avg extract air humidity
 }
 
 type pingvinStatus struct {
 	HeaterPct        int             `json:"heater_pct"`         // After heater valve position
 	HrcPct           int             `json:"hrc_pct"`            // Heat recovery turn speed
-	TempSetting      int             `json:"temp_setting"`       // Requested room temperature
+	TempSetting      float32         `json:"temp_setting"`       // Requested room temperature
 	FanPct           int             `json:"fan_pct"`            // Circulation fan setting
 	VentInfo         pingvinVentInfo `json:"vent_info"`          // Measurements
 	HrcEffIn         int             `json:"hrc_efficiency_in"`  // Calculated HRC efficiency, intake
@@ -382,18 +382,18 @@ func (p *PingvinKL) populateStatus() {
 		p.Status.HeaterPct = 0
 		p.Status.HrcPct = hpct
 	}
-	p.Status.TempSetting = p.Registers[135].Value / p.Registers[135].Multiplier
+	p.Status.TempSetting = float32(p.Registers[135].Value) / float32(p.Registers[135].Multiplier)
 	p.Status.FanPct = p.Registers[774].Value / p.Registers[774].Multiplier
-	p.Status.VentInfo.Roomtemp1 = p.Registers[1].Value / p.Registers[1].Multiplier
-	p.Status.VentInfo.SupplyHeated = p.Registers[8].Value / p.Registers[8].Multiplier
-	p.Status.VentInfo.SupplyHrc = p.Registers[7].Value / p.Registers[7].Multiplier
-	p.Status.VentInfo.SupplyIntake = p.Registers[6].Value / p.Registers[6].Multiplier
-	p.Status.VentInfo.SupplyIntake24h = p.Registers[134].Value / p.Registers[134].Multiplier
-	p.Status.VentInfo.SupplyHum = p.Registers[36].Value / p.Registers[46].Multiplier
-	p.Status.VentInfo.ExtractIntake = p.Registers[10].Value / p.Registers[10].Multiplier
-	p.Status.VentInfo.ExtractHrc = p.Registers[9].Value / p.Registers[9].Multiplier
-	p.Status.VentInfo.ExtractHum = p.Registers[28].Value / p.Registers[28].Multiplier
-	p.Status.VentInfo.ExtractHum48h = p.Registers[50].Value / p.Registers[50].Multiplier
+	p.Status.VentInfo.Roomtemp1 = float32(p.Registers[1].Value) / float32(p.Registers[1].Multiplier)
+	p.Status.VentInfo.SupplyHeated = float32(p.Registers[8].Value) / float32(p.Registers[8].Multiplier)
+	p.Status.VentInfo.SupplyHrc = float32(p.Registers[7].Value) / float32(p.Registers[7].Multiplier)
+	p.Status.VentInfo.SupplyIntake = float32(p.Registers[6].Value) / float32(p.Registers[6].Multiplier)
+	p.Status.VentInfo.SupplyIntake24h = float32(p.Registers[134].Value) / float32(p.Registers[134].Multiplier)
+	p.Status.VentInfo.SupplyHum = float32(p.Registers[36].Value) / float32(p.Registers[46].Multiplier)
+	p.Status.VentInfo.ExtractIntake = float32(p.Registers[10].Value) / float32(p.Registers[10].Multiplier)
+	p.Status.VentInfo.ExtractHrc = float32(p.Registers[9].Value) / float32(p.Registers[9].Multiplier)
+	p.Status.VentInfo.ExtractHum = float32(p.Registers[28].Value) / float32(p.Registers[28].Multiplier)
+	p.Status.VentInfo.ExtractHum48h = float32(p.Registers[50].Value) / float32(p.Registers[50].Multiplier)
 	p.Status.HrcEffIn = p.Registers[29].Value / p.Registers[29].Multiplier
 	p.Status.HrcEffEx = p.Registers[30].Value / p.Registers[30].Multiplier
 	p.Status.OpMode = parseStatus(p.Registers[44].Value)
@@ -411,7 +411,7 @@ func parseStatus(value int) string {
 		"Stopped by user",
 		"Away",
 		"reserved",
-		"Temperature boost",
+		"Adaptive",
 		"CO2 boost",
 		"RH boost",
 		"Manual boost",
