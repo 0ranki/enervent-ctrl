@@ -19,7 +19,7 @@ import (
 var static embed.FS
 
 var (
-	version = "0.0.5"
+	version = "0.0.6"
 	pingvin pingvinKL.PingvinKL
 	DEBUG   = false
 )
@@ -55,11 +55,6 @@ func coils(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(pingvin.Coils[intaddr])
 	}
 }
-
-// func singlecoil(w http.ResponseWriter, r *http.Request) {
-// 	w.Header().Set("Content-Type", "application/json")
-
-// }
 
 func registers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
