@@ -44,13 +44,14 @@ type pingvinRegister struct {
 	Multiplier  int    `json:"multiplier"`
 }
 
-type pingvinVentInfo struct {
+type pingvinMeasurements struct {
 	Roomtemp1       float32 `json:"room_temp1"`        // Room temperature at panel 1
 	SupplyHeated    float32 `json:"supply_heated"`     // Temperature of supply air after heating
 	SupplyHrc       float32 `json:"supply_hrc"`        // Temperature of supply air after heat recovery
 	SupplyIntake    float32 `json:"supply_intake"`     // Temperature of outside air at device
 	SupplyIntake24h float32 `json:"supply_intake_24h"` // 24h avg of outside air humidity
 	SupplyHum       float32 `json:"supply_hum"`        // Supply air humidity
+	Watertemp       float32 `json:"watertemp"`         // Heater element return water temperature
 	ExtractIntake   float32 `json:"extract_intake"`    // Temperature of extract air
 	ExtractHrc      float32 `json:"extract_hrc"`       // Temperature of extract air after heat recovery
 	ExtractHum      float32 `json:"extract_hum"`       // Relative humidity of extract air
@@ -58,17 +59,17 @@ type pingvinVentInfo struct {
 }
 
 type pingvinStatus struct {
-	HeaterPct        int             `json:"heater_pct"`         // After heater valve position
-	HrcPct           int             `json:"hrc_pct"`            // Heat recovery turn speed
-	TempSetting      float32         `json:"temp_setting"`       // Requested room temperature
-	FanPct           int             `json:"fan_pct"`            // Circulation fan setting
-	VentInfo         pingvinVentInfo `json:"vent_info"`          // Measurements
-	HrcEffIn         int             `json:"hrc_efficiency_in"`  // Calculated HRC efficiency, intake
-	HrcEffEx         int             `json:"hrc_efficiency_ex"`  // Calculated HRC efficiency, extract
-	OpMode           string          `json:"op_mode"`            // Current operating mode, text representation
-	DaysUntilService int             `json:"days_until_service"` // Days until next filter service
-	Uptime           string          `json:"uptime"`             // Unit uptime
-	SystemTime       string          `json:"system_time"`        // Time and date in unit
+	HeaterPct        int                 `json:"heater_pct"`         // After heater valve position
+	HrcPct           int                 `json:"hrc_pct"`            // Heat recovery turn speed
+	TempSetting      float32             `json:"temp_setting"`       // Requested room temperature
+	FanPct           int                 `json:"fan_pct"`            // Circulation fan setting
+	Measurements     pingvinMeasurements `json:"measurements"`       // Measurements
+	HrcEffIn         int                 `json:"hrc_efficiency_in"`  // Calculated HRC efficiency, intake
+	HrcEffEx         int                 `json:"hrc_efficiency_ex"`  // Calculated HRC efficiency, extract
+	OpMode           string              `json:"op_mode"`            // Current operating mode, text representation
+	DaysUntilService int                 `json:"days_until_service"` // Days until next filter service
+	Uptime           string              `json:"uptime"`             // Unit uptime
+	SystemTime       string              `json:"system_time"`        // Time and date in unit
 }
 
 var (

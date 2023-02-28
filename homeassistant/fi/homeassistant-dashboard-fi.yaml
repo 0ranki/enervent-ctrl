@@ -18,6 +18,7 @@ views:
           - entity: sensor.enervent_pingvin_tuloilma_lto
           - entity: sensor.enervent_pingvin_tuloilma_kosteus
           - entity: sensor.enervent_pingvin_tuloilma
+          - entity: sensor.enervent_pingvin_paluuvesi
           - entity: sensor.enervent_pingvin_poistoilma
           - entity: sensor.enervent_pingvin_jateilma
           - entity: sensor.enervent_pingvin_poistoilma_kosteus_48h
