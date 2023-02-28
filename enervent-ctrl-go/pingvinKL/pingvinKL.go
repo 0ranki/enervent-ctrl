@@ -385,16 +385,17 @@ func (p *PingvinKL) populateStatus() {
 	}
 	p.Status.TempSetting = float32(p.Registers[135].Value) / float32(p.Registers[135].Multiplier)
 	p.Status.FanPct = p.Registers[774].Value / p.Registers[774].Multiplier
-	p.Status.VentInfo.Roomtemp1 = float32(p.Registers[1].Value) / float32(p.Registers[1].Multiplier)
-	p.Status.VentInfo.SupplyHeated = float32(p.Registers[8].Value) / float32(p.Registers[8].Multiplier)
-	p.Status.VentInfo.SupplyHrc = float32(p.Registers[7].Value) / float32(p.Registers[7].Multiplier)
-	p.Status.VentInfo.SupplyIntake = float32(p.Registers[6].Value) / float32(p.Registers[6].Multiplier)
-	p.Status.VentInfo.SupplyIntake24h = float32(p.Registers[134].Value) / float32(p.Registers[134].Multiplier)
-	p.Status.VentInfo.SupplyHum = float32(p.Registers[36].Value) / float32(p.Registers[46].Multiplier)
-	p.Status.VentInfo.ExtractIntake = float32(p.Registers[10].Value) / float32(p.Registers[10].Multiplier)
-	p.Status.VentInfo.ExtractHrc = float32(p.Registers[9].Value) / float32(p.Registers[9].Multiplier)
-	p.Status.VentInfo.ExtractHum = float32(p.Registers[28].Value) / float32(p.Registers[28].Multiplier)
-	p.Status.VentInfo.ExtractHum48h = float32(p.Registers[50].Value) / float32(p.Registers[50].Multiplier)
+	p.Status.Measurements.Roomtemp1 = float32(p.Registers[1].Value) / float32(p.Registers[1].Multiplier)
+	p.Status.Measurements.SupplyHeated = float32(p.Registers[8].Value) / float32(p.Registers[8].Multiplier)
+	p.Status.Measurements.SupplyHrc = float32(p.Registers[7].Value) / float32(p.Registers[7].Multiplier)
+	p.Status.Measurements.SupplyIntake = float32(p.Registers[6].Value) / float32(p.Registers[6].Multiplier)
+	p.Status.Measurements.SupplyIntake24h = float32(p.Registers[134].Value) / float32(p.Registers[134].Multiplier)
+	p.Status.Measurements.SupplyHum = float32(p.Registers[36].Value) / float32(p.Registers[46].Multiplier)
+	p.Status.Measurements.Watertemp = float32(p.Registers[12].Value) / float32(p.Registers[12].Multiplier)
+	p.Status.Measurements.ExtractIntake = float32(p.Registers[10].Value) / float32(p.Registers[10].Multiplier)
+	p.Status.Measurements.ExtractHrc = float32(p.Registers[9].Value) / float32(p.Registers[9].Multiplier)
+	p.Status.Measurements.ExtractHum = float32(p.Registers[28].Value) / float32(p.Registers[28].Multiplier)
+	p.Status.Measurements.ExtractHum48h = float32(p.Registers[50].Value) / float32(p.Registers[50].Multiplier)
 	p.Status.HrcEffIn = p.Registers[29].Value / p.Registers[29].Multiplier
 	p.Status.HrcEffEx = p.Registers[30].Value / p.Registers[30].Multiplier
 	p.Status.OpMode = parseStatus(p.Registers[44].Value)
