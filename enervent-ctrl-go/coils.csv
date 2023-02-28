@@ -2,8 +2,8 @@
 1;COIL_AWAY;Set the machine to away mode
 2;COIL_AWAYL;Set the machine to away long mode
 3;COIL_OVERPR;Set the machine to overpressure mode
-4;-;-
-5;-;-
+4;COIL_COOKER;Set the machine to cooker hood mode
+5;COIL_C_VAC;Set the machine to central vacuum mode
 6;COIL_MAX_H;Force the machine to heat at maximum effect.
 7;COIL_MAX_C;Force the machine to cool at maximum effect.
 8;COIL_CO2_BOOST_EN;CO2 boosting enabled
