@@ -52,7 +52,7 @@ rest:
         value_template: "{{ value_json['measurements']['supply_hum'] }}"
         unit_of_measurement: "%"
         icon: mdi:water-percent
-      - name: "Enervent Pingvin heater return water"
+      - name: "Enervent Pingvin return water"
         value_template: "{{ value_json['measurements']['watertemp'] }}"
         unit_of_measurement: "°C"
       - name: "Enervent Pingvin extract air"
