@@ -19,7 +19,7 @@ import (
 var static embed.FS
 
 var (
-	version = "0.0.7"
+	version = "0.0.8"
 	pingvin pingvinKL.PingvinKL
 	DEBUG   = false
 )
@@ -58,12 +58,36 @@ func coils(w http.ResponseWriter, r *http.Request) {
 
 func registers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	if DEBUG {
-		log.Println("Received request for /registers")
-	}
-	json.NewEncoder(w).Encode(pingvin.Registers)
-	if DEBUG {
-		log.Println("Handled request for /registers")
+	pathparams := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/registers/"), "/")
+	if len(pathparams[0]) == 0 {
+		json.NewEncoder(w).Encode(pingvin.Registers)
+	} else if len(pathparams[0]) > 0 && r.Method == "GET" && len(pathparams) < 2 { // && r.Method == "POST"
+		intaddr, err := strconv.Atoi(pathparams[0])
+		if err != nil {
+			log.Println("ERROR: Could not parse register address", pathparams[0])
+			log.Println(err)
+			return
+		}
+		pingvin.ReadRegister(uint16(intaddr))
+		json.NewEncoder(w).Encode(pingvin.Registers[intaddr])
+	} else if len(pathparams[0]) > 0 && r.Method == "POST" && len(pathparams) == 2 {
+		intaddr, err := strconv.Atoi(pathparams[0])
+		if err != nil {
+			log.Println("ERROR: Could not parse register address", pathparams[0])
+			log.Println(err)
+			return
+		}
+		intval, err := strconv.Atoi(pathparams[1])
+		if err != nil {
+			log.Println("ERROR: Could not parse register value", pathparams[1])
+			log.Println(err)
+			return
+		}
+		_, err = pingvin.WriteRegister(uint16(intaddr), uint16(intval))
+		if err != nil {
+			log.Println(err)
+		}
+		json.NewEncoder(w).Encode(pingvin.Registers[intaddr])
 	}
 }
 

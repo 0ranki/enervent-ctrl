@@ -180,6 +180,55 @@ func (p *PingvinKL) updateCoils() {
 	}
 }
 
+func (p *PingvinKL) ReadRegister(addr uint16) (int, error) {
+	handler := p.getHandler()
+	p.buslock.Lock()
+	defer p.buslock.Unlock()
+	err := handler.Connect()
+	if err != nil {
+		log.Println("ERROR: ReadRegister:", err)
+		return 0, err
+	}
+	defer handler.Close()
+	client := modbus.NewClient(handler)
+	results, err := client.ReadHoldingRegisters(addr, 1)
+	if err != nil {
+		log.Println("ERROR: ReadRegister:", err)
+		return 0, err
+	}
+	if p.Registers[addr].Type == "uint16" {
+		p.Registers[addr].Value = int(uint16(results[0]) << 8)
+		p.Registers[addr].Value += int(uint16(results[1]))
+	} else if p.Registers[addr].Type == "int16" {
+		p.Registers[addr].Value = int(int16(results[0]) << 8)
+		p.Registers[addr].Value += int(int16(results[1]))
+	}
+	return p.Registers[addr].Value, nil
+}
+
+func (p *PingvinKL) WriteRegister(addr uint16, value uint16) (uint16, error) {
+	handler := p.getHandler()
+	p.buslock.Lock()
+	defer p.buslock.Unlock()
+	err := handler.Connect()
+	if err != nil {
+		log.Println("ERROR: WriteRegister:", err)
+		return 0, err
+	}
+	defer handler.Close()
+	client := modbus.NewClient(handler)
+	_, err = client.WriteSingleRegister(addr, value)
+	if err != nil {
+		log.Println("ERROR: WriteRegister:", err)
+		return 0, err
+	}
+	val, err := p.ReadRegister(addr)
+	if val == int(value) {
+		return value, nil
+	}
+	return 0, fmt.Errorf("Failed to write register")
+}
+
 func (p *PingvinKL) updateRegisters() {
 	handler := p.getHandler()
 	p.buslock.Lock()
