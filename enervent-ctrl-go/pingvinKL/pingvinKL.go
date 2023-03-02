@@ -278,6 +278,9 @@ func (p *PingvinKL) WriteCoil(n uint16, val bool) bool {
 	handler := p.getHandler()
 	p.buslock.Lock()
 	err := handler.Connect()
+	if val {
+		p.checkMutexCoils(n, handler)
+	}
 	if err != nil {
 		log.Println("WARNING: WriteCoil: failed to connect handler")
 		return false
@@ -363,16 +366,23 @@ func (p *PingvinKL) WriteCoils(startaddr uint16, quantity uint16, vals []bool) e
 	return nil
 }
 
-// // TODO
-// func (p *PingvinKL) checkMutexCoils(addr uint16) {
-// 	for i := 0; i < len(mutexcoils); i++ {
-// 		if mutexcoils[i] == addr {
-// 			log.Println("Resetting mode coils")
-// 			// TODO
-// 			return
-// 		}
-// 	}
-// }
+func (p *PingvinKL) checkMutexCoils(addr uint16, handler *modbus.RTUClientHandler) error {
+	for _, mutexcoil := range mutexcoils {
+		if mutexcoil == addr {
+			for _, n := range mutexcoils {
+				if p.Coils[n].Value {
+					_, err := modbus.NewClient(handler).WriteSingleCoil(n, 0)
+					if err != nil {
+						log.Println("ERROR: checkMutexCoils:", err)
+						return err
+					}
+				}
+			}
+			return nil
+		}
+	}
+	return nil
+}
 
 func (p *PingvinKL) populateStatus() {
 	hpct := p.Registers[49].Value / p.Registers[49].Multiplier
