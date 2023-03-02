@@ -180,6 +180,37 @@ func (p *PingvinKL) updateCoils() {
 	}
 }
 
+func (p *PingvinKL) getUnreservedRegisterSections() [][]uint16 {
+	// This function returns a slice of uint16 slices, each representing
+	// a consecutive section of unreserved registers as [start_address, length]
+	// for use as parameters to modbus.Client.ReadHoldingRegisters
+	// But, as there are so many of these sections (17), it's actually faster
+	// to fetch all registers in batches of 125 (total 7 modbus calls)
+	// so this is scrapped. Left on its own branch to shame.
+	nonreserved := [][]uint16{}
+	batch_index := 0
+	for k, register := range p.Registers {
+		if k == 0 {
+			continue // Register 0 is reserved
+		} else if register.Reserved && !p.Registers[k-1].Reserved {
+			log.Println("Found end of batch.", nonreserved[batch_index])
+			batch_index++
+		} else if !register.Reserved && p.Registers[k-1].Reserved {
+			nonreserved = append(nonreserved, []uint16{uint16(k), uint16(1)})
+			// if (p.debug) {
+			log.Println("Starting batch of unreserved registers at index", k)
+			// }
+		} else if !register.Reserved && !p.Registers[k-1].Reserved {
+			log.Println(nonreserved[batch_index][1])
+			nonreserved[batch_index][1] = nonreserved[batch_index][1] + 1
+			// if (p.debug) {
+			log.Println("Continuing batch, current nonreserved batches", nonreserved)
+			// }
+		}
+	}
+	return nonreserved
+}
+
 func (p *PingvinKL) updateRegisters() {
 	handler := p.getHandler()
 	p.buslock.Lock()
