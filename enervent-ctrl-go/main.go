@@ -19,7 +19,7 @@ import (
 var static embed.FS
 
 var (
-	version = "0.0.8"
+	version = "0.0.9"
 	pingvin pingvinKL.PingvinKL
 	DEBUG   = false
 )
@@ -52,6 +52,15 @@ func coils(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		pingvin.WriteCoil(uint16(intaddr), boolval)
+		json.NewEncoder(w).Encode(pingvin.Coils[intaddr])
+	} else if len(pathparams[0]) > 0 && r.Method == "POST" && len(pathparams) == 1 {
+		intaddr, err := strconv.Atoi(pathparams[0])
+		if err != nil {
+			log.Println("ERROR: Could not parse coil address", pathparams[0])
+			log.Println(err)
+			return
+		}
+		pingvin.WriteCoil(uint16(intaddr), !pingvin.Coils[intaddr].Value)
 		json.NewEncoder(w).Encode(pingvin.Coils[intaddr])
 	}
 }
@@ -117,6 +126,6 @@ func main() {
 	log.Println("enervent-ctrl version", version)
 	pingvin = pingvinKL.New(DEBUG)
 	pingvin.Update()
-	go pingvin.Monitor(2)
+	go pingvin.Monitor(4)
 	listen()
 }
