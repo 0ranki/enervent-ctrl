@@ -91,9 +91,9 @@ var (
 	mutexcoils = []uint16{1, 2, 3, 6, 7, 10, 40}
 )
 
-func (logger *PingvinLogger) Println(msg string) {
+func (logger *PingvinLogger) Println(msg ...any) {
 	if logger.dbg {
-		log.Println("DEBUG: ", msg)
+		log.Println(msg...)
 	}
 }
 
@@ -409,9 +409,7 @@ func (p *PingvinKL) WriteCoils(startaddr uint16, quantity uint16, vals []bool) e
 			// ->  0b10100010
 			bits[i/8] &= ^(1 << uint(i%8))
 		}
-		if p.Debug.dbg {
-			log.Println("index:", i/8, "value:", bits[i/8], "shift:", i%8)
-		}
+		p.Debug.Println("index:", i/8, "value:", bits[i/8], "shift:", i%8)
 	}
 	log.Println(bits)
 	client := modbus.NewClient(handler)
@@ -505,14 +503,8 @@ func parseStatus(value int) string {
 func (p *PingvinKL) Monitor(interval int) {
 	for {
 		time.Sleep(time.Duration(interval) * time.Second)
-		if p.Debug.dbg {
-			log.Println("DEBUG: Updating values")
-		}
+		p.Debug.Println("Updating values")
 		p.Update()
-		if p.Debug.dbg {
-			log.Println("DEBUG: coils:", p.Coils)
-			log.Println("DEBUG: registers:", p.Registers)
-		}
 	}
 }
 
