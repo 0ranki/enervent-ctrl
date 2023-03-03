@@ -29,7 +29,7 @@ type PingvinKL struct {
 	Status     pingvinStatus
 	buslock    *sync.Mutex
 	statuslock *sync.Mutex
-	debug      bool
+	Debug      PingvinLogger
 }
 
 // single register data
@@ -72,6 +72,10 @@ type pingvinStatus struct {
 	SystemTime       string              `json:"system_time"`        // Time and date in unit
 }
 
+type PingvinLogger struct {
+	dbg bool
+}
+
 var (
 	// Mutually exclusive coils
 	// Thanks to https://github.com/Jalle19/eda-modbus-bridge
@@ -86,6 +90,12 @@ var (
 
 	mutexcoils = []uint16{1, 2, 3, 6, 7, 10, 40}
 )
+
+func (logger *PingvinLogger) Println(msg string) {
+	if logger.dbg {
+		log.Println("DEBUG: ", msg)
+	}
+}
 
 func newCoil(address string, symbol string, description string) pingvinCoil {
 	addr, err := strconv.Atoi(address)
@@ -399,7 +409,7 @@ func (p *PingvinKL) WriteCoils(startaddr uint16, quantity uint16, vals []bool) e
 			// ->  0b10100010
 			bits[i/8] &= ^(1 << uint(i%8))
 		}
-		if p.debug {
+		if p.Debug.dbg {
 			log.Println("index:", i/8, "value:", bits[i/8], "shift:", i%8)
 		}
 	}
@@ -495,11 +505,11 @@ func parseStatus(value int) string {
 func (p *PingvinKL) Monitor(interval int) {
 	for {
 		time.Sleep(time.Duration(interval) * time.Second)
-		if p.debug {
+		if p.Debug.dbg {
 			log.Println("DEBUG: Updating values")
 		}
 		p.Update()
-		if p.debug {
+		if p.Debug.dbg {
 			log.Println("DEBUG: coils:", p.Coils)
 			log.Println("DEBUG: registers:", p.Registers)
 		}
@@ -509,7 +519,7 @@ func (p *PingvinKL) Monitor(interval int) {
 // create a PingvinKL struct, read coils and registers from CSVs
 func New(debug bool) PingvinKL {
 	pingvin := PingvinKL{}
-	pingvin.debug = debug
+	pingvin.Debug.dbg = debug
 	pingvin.buslock = &sync.Mutex{}
 	log.Println("Parsing coil data...")
 	coilData := readCsvLines("coils.csv")

@@ -19,7 +19,7 @@ import (
 var static embed.FS
 
 var (
-	version = "0.0.9"
+	version = "0.0.10"
 	pingvin pingvinKL.PingvinKL
 	DEBUG   = false
 )
