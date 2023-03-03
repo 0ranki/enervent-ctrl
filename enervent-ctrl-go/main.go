@@ -3,13 +3,16 @@ package main
 import (
 	"embed"
 	"encoding/json"
+	"flag"
 	"io/fs"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
 	"github.com/0ranki/enervent-ctrl/enervent-ctrl-go/pingvinKL"
+	"github.com/gorilla/handlers"
 )
 
 // Remember to dereference the symbolic links under ./static/html
@@ -19,9 +22,11 @@ import (
 var static embed.FS
 
 var (
-	version = "0.0.10"
-	pingvin pingvinKL.PingvinKL
-	DEBUG   = false
+	version    = "0.0.11"
+	pingvin    pingvinKL.PingvinKL
+	DEBUG      *bool
+	INTERVAL   *int
+	ACCESS_LOG *bool
 )
 
 func coils(w http.ResponseWriter, r *http.Request) {
@@ -116,16 +121,37 @@ func listen() {
 	}
 	htmlroot := http.FileServer(http.FS(html))
 	http.Handle("/", htmlroot)
-	err = http.ListenAndServe(":8888", nil)
+	if *ACCESS_LOG {
+		handler := handlers.LoggingHandler(os.Stdout, http.DefaultServeMux)
+		err = http.ListenAndServe(":8888", handler)
+	} else {
+		err = http.ListenAndServe(":8888", nil)
+	}
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
+func configure() {
+	log.Println("Reading configuration")
+	DEBUG = flag.Bool("debug", false, "Enable debug logging")
+	INTERVAL = flag.Int("interval", 4, "Set the interval of background updates")
+	ACCESS_LOG = flag.Bool("httplog", false, "Enable HTTP access logging")
+	flag.Parse()
+	if *DEBUG {
+		log.Println("Debug logging enabled")
+	}
+	if *ACCESS_LOG {
+		log.Println("HTTP Access logging enabled")
+	}
+	log.Println("Update interval set to", *INTERVAL, "seconds")
+}
+
 func main() {
 	log.Println("enervent-ctrl version", version)
-	pingvin = pingvinKL.New(DEBUG)
+	configure()
+	pingvin = pingvinKL.New(*DEBUG)
 	pingvin.Update()
-	go pingvin.Monitor(4)
+	go pingvin.Monitor(*INTERVAL)
 	listen()
 }
