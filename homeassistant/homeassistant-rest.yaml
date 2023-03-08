@@ -89,7 +89,7 @@ rest:
         icon: mdi:snowflake
       - name: "Penguin boost"
         value_template: "{{ value_json['coils'][10]['value'] }}"
-        icon: mdi:arrow-expand-all
+        icon: mdi:fan-plus
 
 rest_command:
   penguin_circulation_adaptive:
