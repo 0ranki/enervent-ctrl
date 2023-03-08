@@ -1,0 +1,90 @@
+automation:
+  - alias: Penguin Max Heating input
+    description: ""
+    trigger:
+      - platform: state
+        entity_id:
+          - input_boolean.penguin_max_heating
+    condition: []
+    action:
+      - if:
+          - condition: state
+            entity_id: input_boolean.penguin_max_heating
+            state: "on"
+        then:
+          - service: rest_command.penguin_max_heating_on
+            data: {}
+        else: []
+      - if:
+          - condition: state
+            entity_id: input_boolean.penguin_max_heating
+            state: "off"
+        then:
+          - service: rest_command.penguin_max_heating_off
+            data: {}
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 0
+          milliseconds: 500
+      - service: homeassistant.update_entity
+        data: {}
+      - if:
+          - condition: state
+            entity_id: binary_sensor.penguin_max_heating
+            state: "on"
+        then: []
+        else:
+          - service: input_boolean.turn_off
+            data: {}
+            target:
+              entity_id: input_boolean.penguin_max_heating
+    mode: single
+  - alias: Penguin Max Heating sensor
+    description: ""
+    trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.penguin_max_heating
+    condition: []
+    action:
+      - if:
+          - condition: state
+            entity_id: binary_sensor.penguin_max_heating
+            state: "on"
+        then:
+          - service: input_boolean.turn_on
+            data: {}
+            target:
+              entity_id: input_boolean.penguin_max_heating
+        else:
+          - service: input_boolean.turn_off
+            data: {}
+            target:
+              entity_id: input_boolean.penguin_max_heating
+    mode: single
+
+
+  - alias: Penguin circulation fan mode
+    description: ""
+    trigger:
+      - platform: state
+        entity_id:
+          - input_boolean.penguin_circulation_fan_adaptive
+    condition: []
+    action:
+      - if:
+          - condition: state
+            entity_id: input_boolean.penguin_circulation_fan_adaptive
+            state: "on"
+        then:
+          - service: rest_command.penguin_circulation_adaptive
+            data: {}
+      - if:
+          - condition: state
+            entity_id: input_boolean.penguin_circulation_fan_adaptive
+            state: "off"
+        then:
+          - service: rest_command.penguin_circulation_manual
+            data: {}
+    mode: single

@@ -1,0 +1,80 @@
+views:
+  - title: Penguin
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: horizontal-stack
+            cards:
+              - type: gauge
+                entity: sensor.penguin_heat_recovery_pct
+                name: LTO
+                severity:
+                  green: 100
+                  yellow: 0
+                  red: 0
+              - type: gauge
+                entity: sensor.penguin_after_heater_pct
+                name: Lämmitys
+                severity:
+                  green: 0
+                  yellow: 0
+                  red: 100
+          - square: false
+            columns: 3
+            type: grid
+            cards:
+              - show_name: true
+                show_icon: true
+                type: button
+                tap_action:
+                  action: toggle
+                entity: input_boolean.penguin_circulation_fan_adaptive
+                name: Mukautuva kiertoilma
+                show_state: false
+              - show_name: true
+                show_icon: true
+                type: button
+                tap_action:
+                  action: toggle
+                entity: input_boolean.penguin_max_heating
+                name: Max lämmitys
+                show_state: false
+          - type: entities
+            entities:
+              - entity: sensor.penguin_operating_mode
+                name: Tila
+              - entity: sensor.penguin_room_temperature_1
+                name: Huonelämpötila
+              - entity: sensor.penguin_temperature_setting
+                name: Asetettu lämpötila
+              - entity: sensor.penguin_circulation_fan_pct
+                name: Kiertoilma
+              - entity: sensor.penguin_days_until_service
+                name: Seuraava huolto
+            state_color: false
+      - type: entities
+        entities:
+          - entity: sensor.penguin_intake_air
+            name: Ulkoilma koneen luona
+          - entity: sensor.penguin_intake_air_24h
+            name: Ulkoilma 24h keskiarvo
+          - entity: sensor.penguin_supply_air_hrc
+            name: Tuloilma LTO jälkeen
+          - entity: sensor.penguin_supply_air_humidity
+            name: Tuloilma kosteus
+          - entity: sensor.penguin_supply_air
+            name: Tuloilma
+          - entity: sensor.penguin_return_water
+            name: Paluuvesi
+          - entity: sensor.penguin_extract_air
+            name: Poistoilma ennen LTO
+          - entity: sensor.penguin_waste_air
+            name: Jäteilma
+          - entity: sensor.penguin_extract_air_humidity
+            name: Poistoilma kosteus
+          - entity: sensor.penguin_hrc_efficiency_intake
+            icon: ''
+            name: LTO hyötysuhde tuloilma
+          - entity: sensor.penguin_hrc_efficiency_extract
+            name: LTO hyötysuhde poistoilma
+        title: Mittaukset

@@ -1,0 +1,7 @@
+input_boolean:
+  penguin_max_heating:
+    name: Penguin Max Heating
+    icon: mdi:heat-wave
+  penguin_circulation_fan_adaptive:
+    name: Penguin Adaptive Circulation Fan
+    icon: mdi:fan-auto

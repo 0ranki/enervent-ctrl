@@ -1,0 +1,122 @@
+rest:
+  - resource: http://IP_ADDRESS:8888/api/v1/status
+    scan_interval: 15
+    sensor:
+      - name: "Penguin operating mode"
+        value_template: "{{ value_json['op_mode'] }}"
+        icon: mdi:information
+      - name: "Penguin room temperature 1"
+        value_template: "{{ value_json['measurements']['room_temp1'] }}"
+        unit_of_measurement: "°C"
+        icon: mdi:thermometer
+      - name: "Penguin after heater pct"
+        value_template: "{{ value_json['heater_pct'] }}"
+        unit_of_measurement: "%"
+        icon: mdi:heating-coil
+      - name: "Penguin heat recovery pct"
+        value_template: "{{ value_json['hrc_pct'] }}"
+        unit_of_measurement: "%"
+        icon: mdi:recycle
+      - name: "Penguin temperature setting"
+        value_template: "{{ value_json['temp_setting'] }}"
+        unit_of_measurement: "°C"
+        icon: mdi:thermometer-check
+      - name: "Penguin circulation fan pct"
+        value_template: "{{ value_json['fan_pct'] }}"
+        unit_of_measurement: "%"
+        icon: mdi:fan
+      - name: "Penguin HRC efficiency intake"
+        value_template: "{{ value_json['hrc_efficiency_in'] }}"
+        unit_of_measurement: "%"
+        icon: mdi:recycle
+      - name: "Penguin HRC efficiency extract"
+        value_template: "{{ value_json['hrc_efficiency_ex'] }}"
+        unit_of_measurement: "%"
+        icon: mdi:recycle
+      - name: "Penguin days until service"
+        value_template: "{{ value_json['days_until_service'] }}"
+        unit_of_measurement: "pv"
+        icon: mdi:calendar
+      - name: "Penguin supply air"
+        value_template: "{{ value_json['measurements']['supply_heated'] }}"
+        unit_of_measurement: "°C"
+        icon: mdi:thermometer
+      - name: "Penguin supply air hrc"
+        value_template: "{{ value_json['measurements']['supply_hrc'] }}"
+        unit_of_measurement: "°C"
+        icon: mdi:thermometer
+      - name: "Penguin intake air"
+        value_template: "{{ value_json['measurements']['supply_intake'] }}"
+        unit_of_measurement: "°C"
+        icon: mdi:thermometer
+      - name: "Penguin intake air 24h"
+        value_template: "{{ value_json['measurements']['supply_intake_24h'] }}"
+        unit_of_measurement: "°C"
+        icon: mdi:thermometer
+      - name: "Penguin supply air humidity"
+        value_template: "{{ value_json['measurements']['supply_hum'] }}"
+        unit_of_measurement: "%"
+        icon: mdi:water-percent
+      - name: "Penguin return water"
+        value_template: "{{ value_json['measurements']['watertemp'] }}"
+        unit_of_measurement: "°C"
+        icon: mdi:water-thermometer-outline
+      - name: "Penguin extract air"
+        value_template: "{{ value_json['measurements']['extract_intake'] }}"
+        unit_of_measurement: "°C"
+        icon: mdi:thermometer
+      - name: "Penguin waste air"
+        value_template: "{{ value_json['measurements']['extract_hrc'] }}"
+        unit_of_measurement: "°C"
+        icon: mdi:thermometer
+      - name: "Penguin extract air humidity"
+        value_template: "{{ value_json['measurements']['extract_hum'] }}"
+        unit_of_measurement: "%"
+        icon: mdi:water-percent
+      - name: "Penguin extract air humidity 48h"
+        value_template: "{{ value_json['measurements']['extract_hum_48h'] }}"
+        unit_of_measurement: "%"
+        icon: mdi:water-percent
+    binary_sensor:
+      - name: "Penguin circulation adaptive"
+        value_template: "{{ value_json['coils'][11]['value'] }}"
+        icon: mdi:fan-auto
+      - name: "Penguin max heating"
+        value_template: "{{ value_json['coils'][6]['value'] }}"
+        icon: mdi:heat-wave
+      - name: "Penguin max cooling"
+        value_template: "{{ value_json['coils'][7]['value'] }}"
+        icon: mdi:snowflake
+      - name: "Penguin boost"
+        value_template: "{{ value_json['coils'][10]['value'] }}"
+        icon: mdi:arrow-expand-all
+
+rest_command:
+  penguin_circulation_adaptive:
+    url: http://IP_ADDRESS:8888/api/v1/coils/11/1
+    method: POST
+    icon: mdi:fan-auto
+  penguin_circulation_manual:
+    url: http://IP_ADDRESS:8888/api/v1/coils/11/0
+    method: POST
+    icon: mdi:fan
+  penguin_boost_toggle:
+    url: http://IP_ADDRESS:8888/api/v1/coils/10
+    method: POST
+    icon: mdi:fan-plus
+  penguin_overpressure_toggle:
+    url: http://IP_ADDRESS:8888/api/v1/coils/3
+    method: POST
+    icon: mdi:arrow-expand-all
+  penguin_max_heating_on:
+    url: http://IP_ADDRESS:8888/api/v1/coils/6/1
+    method: POST
+    icon: mdi:heat-wave
+  penguin_max_heating_off:
+    url: http://IP_ADDRESS:8888/api/v1/coils/6/0
+    method: POST
+    icon: mdi:scent-off
+  penguin_max_cooling_toggle:
+    url: http://IP_ADDRESS:8888/api/v1/coils/7
+    method: POST
+    icon: mdi:snowflake
