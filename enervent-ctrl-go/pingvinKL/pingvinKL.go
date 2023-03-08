@@ -70,6 +70,7 @@ type pingvinStatus struct {
 	DaysUntilService int                 `json:"days_until_service"` // Days until next filter service
 	Uptime           string              `json:"uptime"`             // Unit uptime
 	SystemTime       string              `json:"system_time"`        // Time and date in unit
+	Coils            []pingvinCoil       `json:"coils"`
 }
 
 type PingvinLogger struct {
@@ -469,6 +470,7 @@ func (p *PingvinKL) populateStatus() {
 	// TODO: Alarms, n of alarms
 	p.Status.DaysUntilService = p.Registers[538].Value / p.Registers[538].Multiplier
 	// TODO: Uptime & date in separate functions
+	p.Status.Coils = p.Coils
 }
 
 func parseStatus(value int) string {
