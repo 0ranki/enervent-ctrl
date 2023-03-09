@@ -22,7 +22,7 @@ import (
 var static embed.FS
 
 var (
-	version    = "0.0.13"
+	version    = "0.0.14"
 	pingvin    pingvinKL.PingvinKL
 	DEBUG      *bool
 	INTERVAL   *int
@@ -166,4 +166,5 @@ func main() {
 	pingvin.Update()
 	go pingvin.Monitor(*INTERVAL)
 	listen()
+	pingvin.Quit()
 }

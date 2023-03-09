@@ -240,6 +240,7 @@ func (p *PingvinKL) WriteRegister(addr uint16, value uint16) (uint16, error) {
 	return 0, fmt.Errorf("Failed to write register")
 }
 
+// Update all holding register values
 func (p *PingvinKL) updateRegisters() {
 	var err error
 	regs := len(p.Registers)
@@ -305,47 +306,37 @@ func (p *PingvinKL) updateRegisters() {
 	}
 }
 
+// Wrapper function for updating coils, registers and populating
+// p.Status for Home Assistant
 func (p *PingvinKL) Update() {
 	p.updateCoils()
 	p.updateRegisters()
 	p.populateStatus()
 }
 
-func (p PingvinKL) ReadCoil(n uint16) []byte {
-	// handler := p.getHandler()
+// Read single coil
+func (p PingvinKL) ReadCoil(n uint16) ([]byte, error) {
 	p.buslock.Lock()
-	err := p.handler.Connect()
-	if err != nil {
-		log.Fatal("ReadCoil: handler.Connect: ", err)
-	}
-	defer p.handler.Close()
-	// client := modbus.NewClient(handler)
 	results, err := p.modbusclient.ReadCoils(n, 1)
 	p.buslock.Unlock()
 	if err != nil {
 		log.Fatal("ReadCoil: client.ReadCoils: ", err)
+		return nil, err
 	}
 	p.Coils[n].Value = results[0] == 1
-	return results
+	return results, nil
 }
 
+// Force a single coil
 func (p *PingvinKL) WriteCoil(n uint16, val bool) bool {
-	// handler := p.getHandler()
-	p.buslock.Lock()
-	err := p.handler.Connect()
 	if val {
 		p.checkMutexCoils(n, p.handler)
 	}
-	if err != nil {
-		log.Println("WARNING: WriteCoil: failed to connect handler")
-		return false
-	}
-	defer p.handler.Close()
 	var value uint16 = 0
 	if val {
 		value = 0xff00
 	}
-	// client := modbus.NewClient(handler)
+	p.buslock.Lock()
 	results, err := p.modbusclient.WriteSingleCoil(n, value)
 	p.buslock.Unlock()
 	if err != nil {
@@ -362,15 +353,8 @@ func (p *PingvinKL) WriteCoil(n uint16, val bool) bool {
 	return true
 }
 
+// Force multiple coils
 func (p *PingvinKL) WriteCoils(startaddr uint16, quantity uint16, vals []bool) error {
-	// handler := p.getHandler()
-	p.buslock.Lock()
-	err := p.handler.Connect()
-	if err != nil {
-		log.Println("WARNING: WriteCoils: failed to connect handler:", err)
-		return err
-	}
-	defer p.handler.Close()
 	p.updateCoils()
 	coilslice := p.Coils[startaddr:(startaddr + quantity)]
 	if len(coilslice) != len(vals) {
@@ -407,8 +391,8 @@ func (p *PingvinKL) WriteCoils(startaddr uint16, quantity uint16, vals []bool) e
 		}
 		p.Debug.Println("index:", i/8, "value:", bits[i/8], "shift:", i%8)
 	}
-	log.Println(bits)
-	// client := modbus.NewClient(handler)
+	p.Debug.Println(bits)
+	p.buslock.Lock()
 	results, err := p.modbusclient.WriteMultipleCoils(startaddr, quantity, bits)
 	p.buslock.Unlock()
 	if err != nil {
@@ -419,12 +403,16 @@ func (p *PingvinKL) WriteCoils(startaddr uint16, quantity uint16, vals []bool) e
 	return nil
 }
 
+// Some of the coils are mutually exclusive, and can only be 1 one at a time.
+// Check if coil is one of them and force all of them to 0 if so
 func (p *PingvinKL) checkMutexCoils(addr uint16, handler *modbus.RTUClientHandler) error {
 	for _, mutexcoil := range mutexcoils {
 		if mutexcoil == addr {
 			for _, n := range mutexcoils {
 				if p.Coils[n].Value {
+					p.buslock.Lock()
 					_, err := p.modbusclient.WriteSingleCoil(n, 0)
+					p.buslock.Unlock()
 					if err != nil {
 						log.Println("ERROR: checkMutexCoils:", err)
 						return err
@@ -437,6 +425,7 @@ func (p *PingvinKL) checkMutexCoils(addr uint16, handler *modbus.RTUClientHandle
 	return nil
 }
 
+// populate p.Status struct for Home Assistant
 func (p *PingvinKL) populateStatus() {
 	hpct := p.Registers[49].Value / p.Registers[49].Multiplier
 	if hpct > 100 {
@@ -468,6 +457,7 @@ func (p *PingvinKL) populateStatus() {
 	p.Status.Coils = p.Coils
 }
 
+// Parse readable status from integer (bitfield) value
 func parseStatus(value int) string {
 	val := int16(value)
 	pingvinStatuses := []string{
