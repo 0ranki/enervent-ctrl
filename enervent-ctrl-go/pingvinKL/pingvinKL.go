@@ -24,12 +24,14 @@ type pingvinCoil struct {
 
 // unit modbus data
 type PingvinKL struct {
-	Coils      []pingvinCoil
-	Registers  []pingvinRegister
-	Status     pingvinStatus
-	buslock    *sync.Mutex
-	statuslock *sync.Mutex
-	Debug      PingvinLogger
+	Coils        []pingvinCoil
+	Registers    []pingvinRegister
+	Status       pingvinStatus
+	buslock      *sync.Mutex
+	statuslock   *sync.Mutex
+	handler      *modbus.RTUClientHandler
+	modbusclient modbus.Client
+	Debug        PingvinLogger
 }
 
 // single register data
@@ -145,33 +147,35 @@ func readCsvLines(file string) [][]string {
 	return data
 }
 
-// Configure the modbus parameters
-func (p PingvinKL) getHandler() *modbus.RTUClientHandler {
+func (p *PingvinKL) createModbusClient() {
 	// TODO: read configuration from file, hardcoded for now
-	handler := modbus.NewRTUClientHandler("/dev/ttyS0")
-	handler.BaudRate = 19200
-	handler.DataBits = 8
-	handler.Parity = "N"
-	handler.StopBits = 1
-	handler.SlaveId = 1
-	handler.Timeout = 1500 * time.Millisecond
-	return handler
+	p.handler = modbus.NewRTUClientHandler("/dev/ttyS0")
+	p.handler.BaudRate = 19200
+	p.handler.DataBits = 8
+	p.handler.Parity = "N"
+	p.handler.StopBits = 1
+	p.handler.SlaveId = 1
+	p.handler.Timeout = 1500 * time.Millisecond
+	err := p.handler.Connect()
+	if err != nil {
+		log.Fatal("createModbusClient: p.handler.Connect: ", err)
+	}
+	p.Debug.Println("Handler connected")
+	p.modbusclient = modbus.NewClient(p.handler)
+}
+
+func (p *PingvinKL) Quit() {
+	err := p.handler.Close()
+	if err != nil {
+		log.Println("ERROR: Quit:", err)
+	}
 }
 
 func (p *PingvinKL) updateCoils() {
-	handler := p.getHandler()
-	p.buslock.Lock()
-	err := handler.Connect()
-	if err != nil {
-		log.Fatal("updateCoils: handler.Connect: ", err)
-	}
-	defer handler.Close()
-	client := modbus.NewClient(handler)
-	results, err := client.ReadCoils(0, uint16(len(p.Coils)))
+	results, err := p.modbusclient.ReadCoils(0, uint16(len(p.Coils)))
 	if err != nil {
 		log.Fatal("updateCoils: client.ReadCoils: ", err)
 	}
-	p.buslock.Unlock()
 	// modbus.ReadCoils returns a byte array, with the first byte's bits representing coil values 0-7,
 	// second byte coils 8-15 etc.
 	// Within each byte, LSB represents the lowest n coil while MSB is the highest
@@ -192,17 +196,17 @@ func (p *PingvinKL) updateCoils() {
 }
 
 func (p *PingvinKL) ReadRegister(addr uint16) (int, error) {
-	handler := p.getHandler()
+	// handler := p.getHandler()
 	p.buslock.Lock()
 	defer p.buslock.Unlock()
-	err := handler.Connect()
+	err := p.handler.Connect()
 	if err != nil {
 		log.Println("ERROR: ReadRegister:", err)
 		return 0, err
 	}
-	defer handler.Close()
-	client := modbus.NewClient(handler)
-	results, err := client.ReadHoldingRegisters(addr, 1)
+	// defer handler.Close()
+	// client := modbus.NewClient(handler)
+	results, err := p.modbusclient.ReadHoldingRegisters(addr, 1)
 	if err != nil {
 		log.Println("ERROR: ReadRegister:", err)
 		return 0, err
@@ -218,17 +222,17 @@ func (p *PingvinKL) ReadRegister(addr uint16) (int, error) {
 }
 
 func (p *PingvinKL) WriteRegister(addr uint16, value uint16) (uint16, error) {
-	handler := p.getHandler()
+	// handler := p.getHandler()
 	p.buslock.Lock()
 	defer p.buslock.Unlock()
-	err := handler.Connect()
+	err := p.handler.Connect()
 	if err != nil {
 		log.Println("ERROR: WriteRegister:", err)
 		return 0, err
 	}
-	defer handler.Close()
-	client := modbus.NewClient(handler)
-	_, err = client.WriteSingleRegister(addr, value)
+	defer p.handler.Close()
+	// client := modbus.NewClient(handler)
+	_, err = p.modbusclient.WriteSingleRegister(addr, value)
 	if err != nil {
 		log.Println("ERROR: WriteRegister:", err)
 		return 0, err
@@ -241,14 +245,7 @@ func (p *PingvinKL) WriteRegister(addr uint16, value uint16) (uint16, error) {
 }
 
 func (p *PingvinKL) updateRegisters() {
-	handler := p.getHandler()
-	p.buslock.Lock()
-	err := handler.Connect()
-	if err != nil {
-		log.Fatal("updateRegisters: handler.Connect: ", err)
-	}
-	defer handler.Close()
-	client := modbus.NewClient(handler)
+	var err error
 	regs := len(p.Registers)
 	k := 0
 	// modbus.ReadHoldingRegisters can read 125 regs at a time, so first we loop
@@ -261,7 +258,8 @@ func (p *PingvinKL) updateRegisters() {
 		}
 		results := []byte{}
 		for retries := 0; retries < 5; retries++ {
-			results, err = client.ReadHoldingRegisters(uint16(k), uint16(r))
+			p.Debug.Println("Reading registers, attempt", retries, "k:", k)
+			results, err = p.modbusclient.ReadHoldingRegisters(uint16(k), uint16(r))
 			if len(results) > 0 {
 				break
 			} else if retries == 4 {
@@ -307,25 +305,25 @@ func (p *PingvinKL) updateRegisters() {
 			msb = !msb
 		}
 	}
-	p.buslock.Unlock()
 }
 
 func (p *PingvinKL) Update() {
 	p.updateCoils()
 	p.updateRegisters()
 	p.populateStatus()
+	log.Println(p.Status)
 }
 
 func (p PingvinKL) ReadCoil(n uint16) []byte {
-	handler := p.getHandler()
+	// handler := p.getHandler()
 	p.buslock.Lock()
-	err := handler.Connect()
+	err := p.handler.Connect()
 	if err != nil {
 		log.Fatal("ReadCoil: handler.Connect: ", err)
 	}
-	defer handler.Close()
-	client := modbus.NewClient(handler)
-	results, err := client.ReadCoils(n, 1)
+	defer p.handler.Close()
+	// client := modbus.NewClient(handler)
+	results, err := p.modbusclient.ReadCoils(n, 1)
 	p.buslock.Unlock()
 	if err != nil {
 		log.Fatal("ReadCoil: client.ReadCoils: ", err)
@@ -335,23 +333,23 @@ func (p PingvinKL) ReadCoil(n uint16) []byte {
 }
 
 func (p *PingvinKL) WriteCoil(n uint16, val bool) bool {
-	handler := p.getHandler()
+	// handler := p.getHandler()
 	p.buslock.Lock()
-	err := handler.Connect()
+	err := p.handler.Connect()
 	if val {
-		p.checkMutexCoils(n, handler)
+		p.checkMutexCoils(n, p.handler)
 	}
 	if err != nil {
 		log.Println("WARNING: WriteCoil: failed to connect handler")
 		return false
 	}
-	defer handler.Close()
+	defer p.handler.Close()
 	var value uint16 = 0
 	if val {
 		value = 0xff00
 	}
-	client := modbus.NewClient(handler)
-	results, err := client.WriteSingleCoil(n, value)
+	// client := modbus.NewClient(handler)
+	results, err := p.modbusclient.WriteSingleCoil(n, value)
 	p.buslock.Unlock()
 	if err != nil {
 		log.Println("ERROR: WriteCoil: ", err)
@@ -368,14 +366,14 @@ func (p *PingvinKL) WriteCoil(n uint16, val bool) bool {
 }
 
 func (p *PingvinKL) WriteCoils(startaddr uint16, quantity uint16, vals []bool) error {
-	handler := p.getHandler()
+	// handler := p.getHandler()
 	p.buslock.Lock()
-	err := handler.Connect()
+	err := p.handler.Connect()
 	if err != nil {
 		log.Println("WARNING: WriteCoils: failed to connect handler:", err)
 		return err
 	}
-	defer handler.Close()
+	defer p.handler.Close()
 	p.updateCoils()
 	coilslice := p.Coils[startaddr:(startaddr + quantity)]
 	if len(coilslice) != len(vals) {
@@ -413,8 +411,8 @@ func (p *PingvinKL) WriteCoils(startaddr uint16, quantity uint16, vals []bool) e
 		p.Debug.Println("index:", i/8, "value:", bits[i/8], "shift:", i%8)
 	}
 	log.Println(bits)
-	client := modbus.NewClient(handler)
-	results, err := client.WriteMultipleCoils(startaddr, quantity, bits)
+	// client := modbus.NewClient(handler)
+	results, err := p.modbusclient.WriteMultipleCoils(startaddr, quantity, bits)
 	p.buslock.Unlock()
 	if err != nil {
 		log.Println("ERROR: WriteCoils: ", err)
@@ -429,7 +427,7 @@ func (p *PingvinKL) checkMutexCoils(addr uint16, handler *modbus.RTUClientHandle
 		if mutexcoil == addr {
 			for _, n := range mutexcoils {
 				if p.Coils[n].Value {
-					_, err := modbus.NewClient(handler).WriteSingleCoil(n, 0)
+					_, err := p.modbusclient.WriteSingleCoil(n, 0)
 					if err != nil {
 						log.Println("ERROR: checkMutexCoils:", err)
 						return err
@@ -553,6 +551,7 @@ func New(debug bool) PingvinKL {
 	pingvin := PingvinKL{}
 	pingvin.Debug.dbg = debug
 	pingvin.buslock = &sync.Mutex{}
+	pingvin.createModbusClient()
 	log.Println("Parsing coil data...")
 	coilData := readCsvLines("coils.csv")
 	for i := 0; i < len(coilData); i++ {
