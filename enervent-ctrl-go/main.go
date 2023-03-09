@@ -22,7 +22,7 @@ import (
 var static embed.FS
 
 var (
-	version    = "0.0.14"
+	version    = "0.0.15"
 	pingvin    pingvinKL.PingvinKL
 	DEBUG      *bool
 	INTERVAL   *int

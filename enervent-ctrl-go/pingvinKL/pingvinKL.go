@@ -487,6 +487,12 @@ func parseStatus(value int) string {
 
 }
 
+// Change temperature setpoint (register 135)
+// action can be up, down or a value.
+// If value, the value can be the raw register value (200-300),
+// a decimal degree value (20.0 - 23.0), or full degrees (20-30)
+// Temperature must be between 20 and 30 deg Celsius, otherwise
+// returns an error
 func (p *PingvinKL) Temperature(action string) error {
 	temperature := 0
 	if action == "up" {
@@ -505,13 +511,13 @@ func (p *PingvinKL) Temperature(action string) error {
 				return err
 			}
 			t = int(tfloat * float64(p.Registers[135].Multiplier))
+		}
+		if t <= 30 && t >= 20 {
+			temperature = 10 * t
+		} else {
 			temperature = t
 		}
 		p.Debug.Println("Setting temperature to", temperature)
-		// _, err = p.WriteRegister(135, uint16(t))
-		// if err != nil {
-		// 	return err
-		// }
 	}
 	if temperature > 300 || temperature < 200 {
 		return fmt.Errorf("Temperature setpoint must be between 200 and 300")
