@@ -216,23 +216,18 @@ func (p *PingvinKL) ReadRegister(addr uint16) (int, error) {
 	return p.Registers[addr].Value, nil
 }
 
+// Update a single holding register
 func (p *PingvinKL) WriteRegister(addr uint16, value uint16) (uint16, error) {
-	// handler := p.getHandler()
-	p.buslock.Lock()
-	defer p.buslock.Unlock()
-	err := p.handler.Connect()
-	if err != nil {
-		log.Println("ERROR: WriteRegister:", err)
-		return 0, err
-	}
-	defer p.handler.Close()
-	// client := modbus.NewClient(handler)
-	_, err = p.modbusclient.WriteSingleRegister(addr, value)
+	_, err := p.modbusclient.WriteSingleRegister(addr, value)
 	if err != nil {
 		log.Println("ERROR: WriteRegister:", err)
 		return 0, err
 	}
 	val, err := p.ReadRegister(addr)
+	if err != nil {
+		log.Println("ERROR: WriteRegister:", err)
+		return 0, err
+	}
 	if val == int(value) {
 		return value, nil
 	}
@@ -306,7 +301,6 @@ func (p *PingvinKL) Update() {
 	p.updateCoils()
 	p.updateRegisters()
 	p.populateStatus()
-	log.Println(p.Status)
 }
 
 func (p PingvinKL) ReadCoil(n uint16) []byte {
