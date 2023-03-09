@@ -147,6 +147,8 @@ func readCsvLines(file string) [][]string {
 	return data
 }
 
+// Create modbus.Handler, store it in p.handler,
+// connect the handler and create p.modbusclient (modbus.Client)
 func (p *PingvinKL) createModbusClient() {
 	// TODO: read configuration from file, hardcoded for now
 	p.handler = modbus.NewRTUClientHandler("/dev/ttyS0")
@@ -171,6 +173,7 @@ func (p *PingvinKL) Quit() {
 	}
 }
 
+// Update all coil values
 func (p *PingvinKL) updateCoils() {
 	results, err := p.modbusclient.ReadCoils(0, uint16(len(p.Coils)))
 	if err != nil {
@@ -195,17 +198,9 @@ func (p *PingvinKL) updateCoils() {
 	}
 }
 
+// Read a single holding register, stores value in p.Registers
+// Returns integer value of register
 func (p *PingvinKL) ReadRegister(addr uint16) (int, error) {
-	// handler := p.getHandler()
-	p.buslock.Lock()
-	defer p.buslock.Unlock()
-	err := p.handler.Connect()
-	if err != nil {
-		log.Println("ERROR: ReadRegister:", err)
-		return 0, err
-	}
-	// defer handler.Close()
-	// client := modbus.NewClient(handler)
 	results, err := p.modbusclient.ReadHoldingRegisters(addr, 1)
 	if err != nil {
 		log.Println("ERROR: ReadRegister:", err)
