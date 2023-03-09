@@ -175,7 +175,9 @@ func (p *PingvinKL) Quit() {
 
 // Update all coil values
 func (p *PingvinKL) updateCoils() {
+	p.buslock.Lock()
 	results, err := p.modbusclient.ReadCoils(0, uint16(len(p.Coils)))
+	p.buslock.Unlock()
 	if err != nil {
 		log.Fatal("updateCoils: client.ReadCoils: ", err)
 	}
@@ -201,7 +203,9 @@ func (p *PingvinKL) updateCoils() {
 // Read a single holding register, stores value in p.Registers
 // Returns integer value of register
 func (p *PingvinKL) ReadRegister(addr uint16) (int, error) {
+	p.buslock.Lock()
 	results, err := p.modbusclient.ReadHoldingRegisters(addr, 1)
+	p.buslock.Unlock()
 	if err != nil {
 		log.Println("ERROR: ReadRegister:", err)
 		return 0, err
@@ -218,7 +222,9 @@ func (p *PingvinKL) ReadRegister(addr uint16) (int, error) {
 
 // Update a single holding register
 func (p *PingvinKL) WriteRegister(addr uint16, value uint16) (uint16, error) {
+	p.buslock.Lock()
 	_, err := p.modbusclient.WriteSingleRegister(addr, value)
+	p.buslock.Unlock()
 	if err != nil {
 		log.Println("ERROR: WriteRegister:", err)
 		return 0, err
@@ -249,7 +255,9 @@ func (p *PingvinKL) updateRegisters() {
 		results := []byte{}
 		for retries := 0; retries < 5; retries++ {
 			p.Debug.Println("Reading registers, attempt", retries, "k:", k)
+			p.buslock.Lock()
 			results, err = p.modbusclient.ReadHoldingRegisters(uint16(k), uint16(r))
+			p.buslock.Unlock()
 			if len(results) > 0 {
 				break
 			} else if retries == 4 {
