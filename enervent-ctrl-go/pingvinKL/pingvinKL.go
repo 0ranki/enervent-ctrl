@@ -502,6 +502,44 @@ func parseStatus(value int) string {
 
 }
 
+func (p *PingvinKL) Temperature(action string) error {
+	temperature := 0
+	if action == "up" {
+		temperature = p.Registers[135].Value + 1*p.Registers[135].Multiplier
+		p.Debug.Println("Raising temperature to", temperature)
+	} else if action == "down" {
+		temperature = p.Registers[135].Value - 1*p.Registers[135].Multiplier
+		p.Debug.Println("Lowering temperature to", temperature)
+	} else {
+		t, err := strconv.Atoi(action)
+		if err != nil {
+			p.Debug.Println(err)
+			tfloat, err := strconv.ParseFloat(action, 32)
+			if err != nil {
+				p.Debug.Println(err)
+				return err
+			}
+			t = int(tfloat * float64(p.Registers[135].Multiplier))
+			temperature = t
+		}
+		p.Debug.Println("Setting temperature to", temperature)
+		// _, err = p.WriteRegister(135, uint16(t))
+		// if err != nil {
+		// 	return err
+		// }
+	}
+	if temperature > 300 || temperature < 200 {
+		return fmt.Errorf("Temperature setpoint must be between 200 and 300")
+	}
+	p.Debug.Println("Writing register 135 to", temperature)
+	res, err := p.WriteRegister(135, uint16(temperature))
+	if err != nil {
+		return err
+	}
+	p.Debug.Println("Temperature changed to", res)
+	return nil
+}
+
 func (p *PingvinKL) Monitor(interval int) {
 	for {
 		time.Sleep(time.Duration(interval) * time.Second)

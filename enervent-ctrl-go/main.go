@@ -22,7 +22,7 @@ import (
 var static embed.FS
 
 var (
-	version    = "0.0.12"
+	version    = "0.0.13"
 	pingvin    pingvinKL.PingvinKL
 	DEBUG      *bool
 	INTERVAL   *int
@@ -110,11 +110,23 @@ func status(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(pingvin.Status)
 }
 
+func temperature(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	pathparams := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/temperature/"), "/")
+	if len(pathparams[0]) > 0 && r.Method == "POST" && len(pathparams) == 1 {
+		pingvin.Temperature(pathparams[0])
+		json.NewEncoder(w).Encode(pingvin.Registers[135])
+	} else {
+		return
+	}
+}
+
 func listen() {
 	log.Println("Starting pingvinAPI...")
 	http.HandleFunc("/api/v1/coils/", coils)
 	http.HandleFunc("/api/v1/registers/", registers)
 	http.HandleFunc("/api/v1/status", status)
+	http.HandleFunc("/api/v1/temperature/", temperature)
 	html, err := fs.Sub(static, "static/html")
 	if err != nil {
 		log.Fatal(err)
