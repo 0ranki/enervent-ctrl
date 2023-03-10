@@ -49,8 +49,6 @@ views:
                 name: Asetettu lämpötila
               - entity: sensor.penguin_circulation_fan_pct
                 name: Kiertoilma
-              - entity: sensor.penguin_days_until_service
-                name: Seuraava huolto
             state_color: false
       - type: entities
         entities:

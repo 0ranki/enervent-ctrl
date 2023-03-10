@@ -61,18 +61,17 @@ type pingvinMeasurements struct {
 }
 
 type pingvinStatus struct {
-	HeaterPct        int                 `json:"heater_pct"`         // After heater valve position
-	HrcPct           int                 `json:"hrc_pct"`            // Heat recovery turn speed
-	TempSetting      float32             `json:"temp_setting"`       // Requested room temperature
-	FanPct           int                 `json:"fan_pct"`            // Circulation fan setting
-	Measurements     pingvinMeasurements `json:"measurements"`       // Measurements
-	HrcEffIn         int                 `json:"hrc_efficiency_in"`  // Calculated HRC efficiency, intake
-	HrcEffEx         int                 `json:"hrc_efficiency_ex"`  // Calculated HRC efficiency, extract
-	OpMode           string              `json:"op_mode"`            // Current operating mode, text representation
-	DaysUntilService int                 `json:"days_until_service"` // Days until next filter service
-	Uptime           string              `json:"uptime"`             // Unit uptime
-	SystemTime       string              `json:"system_time"`        // Time and date in unit
-	Coils            []pingvinCoil       `json:"coils"`
+	HeaterPct    int                 `json:"heater_pct"`        // After heater valve position
+	HrcPct       int                 `json:"hrc_pct"`           // Heat recovery turn speed
+	TempSetting  float32             `json:"temp_setting"`      // Requested room temperature
+	FanPct       int                 `json:"fan_pct"`           // Circulation fan setting
+	Measurements pingvinMeasurements `json:"measurements"`      // Measurements
+	HrcEffIn     int                 `json:"hrc_efficiency_in"` // Calculated HRC efficiency, intake
+	HrcEffEx     int                 `json:"hrc_efficiency_ex"` // Calculated HRC efficiency, extract
+	OpMode       string              `json:"op_mode"`           // Current operating mode, text representation
+	Uptime       string              `json:"uptime"`            // Unit uptime
+	SystemTime   string              `json:"system_time"`       // Time and date in unit
+	Coils        []pingvinCoil       `json:"coils"`
 }
 
 type PingvinLogger struct {
@@ -452,7 +451,6 @@ func (p *PingvinKL) populateStatus() {
 	p.Status.HrcEffEx = p.Registers[30].Value / p.Registers[30].Multiplier
 	p.Status.OpMode = parseStatus(p.Registers[44].Value)
 	// TODO: Alarms, n of alarms
-	p.Status.DaysUntilService = p.Registers[538].Value / p.Registers[538].Multiplier
 	// TODO: Uptime & date in separate functions
 	p.Status.Coils = p.Coils
 }
