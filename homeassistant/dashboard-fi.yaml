@@ -72,6 +72,8 @@ views:
             name: Jäteilma
           - entity: sensor.penguin_extract_air_humidity
             name: Poistoilma kosteus
+          - entity: sensor.penguin_extract_air_humidity_48h
+            name: Poistoilma kosteus 48h
           - entity: sensor.penguin_hrc_efficiency_intake
             icon: ''
             name: LTO hyötysuhde tuloilma

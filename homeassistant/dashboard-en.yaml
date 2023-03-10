@@ -72,6 +72,8 @@ views:
             name: Waste air
           - entity: sensor.penguin_extract_air_humidity
             name: Extract air humidity
+          - entity: sensor.penguin_extract_air_humidity_48h
+            name: Extract air humidity 48h avg
           - entity: sensor.penguin_hrc_efficiency_intake
             name: HRC efficiency intake
           - entity: sensor.penguin_hrc_efficiency_extract

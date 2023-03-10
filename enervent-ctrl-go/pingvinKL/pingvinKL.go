@@ -442,12 +442,12 @@ func (p *PingvinKL) populateStatus() {
 	p.Status.Measurements.SupplyHrc = float32(p.Registers[7].Value) / float32(p.Registers[7].Multiplier)
 	p.Status.Measurements.SupplyIntake = float32(p.Registers[6].Value) / float32(p.Registers[6].Multiplier)
 	p.Status.Measurements.SupplyIntake24h = float32(p.Registers[134].Value) / float32(p.Registers[134].Multiplier)
-	p.Status.Measurements.SupplyHum = float32(p.Registers[36].Value) / float32(p.Registers[46].Multiplier)
+	p.Status.Measurements.SupplyHum = float32(p.Registers[36].Value) / float32(p.Registers[36].Multiplier)
 	p.Status.Measurements.Watertemp = float32(p.Registers[12].Value) / float32(p.Registers[12].Multiplier)
 	p.Status.Measurements.ExtractIntake = float32(p.Registers[10].Value) / float32(p.Registers[10].Multiplier)
 	p.Status.Measurements.ExtractHrc = float32(p.Registers[9].Value) / float32(p.Registers[9].Multiplier)
-	p.Status.Measurements.ExtractHum = float32(p.Registers[28].Value) / float32(p.Registers[28].Multiplier)
-	p.Status.Measurements.ExtractHum48h = float32(p.Registers[50].Value) / float32(p.Registers[50].Multiplier)
+	p.Status.Measurements.ExtractHum = float32(p.Registers[13].Value) / float32(p.Registers[13].Multiplier)
+	p.Status.Measurements.ExtractHum48h = float32(p.Registers[35].Value) / float32(p.Registers[35].Multiplier)
 	p.Status.HrcEffIn = p.Registers[29].Value / p.Registers[29].Multiplier
 	p.Status.HrcEffEx = p.Registers[30].Value / p.Registers[30].Multiplier
 	p.Status.OpMode = parseStatus(p.Registers[44].Value)
