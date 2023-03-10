@@ -20,7 +20,7 @@ views:
                   yellow: 0
                   red: 100
           - square: false
-            columns: 5
+            columns: 4
             type: grid
             cards:
               - show_name: false
@@ -31,14 +31,32 @@ views:
                 entity: input_boolean.penguin_circulation_fan_adaptive
                 name: Mukautuva kiertoilma
                 show_state: false
-              - show_name: false
-                show_icon: true
-                type: button
-                tap_action:
-                  action: toggle
-                entity: input_boolean.penguin_max_heating
-                name: Max lämmitys
-                show_state: false
+              - type: conditional
+                conditions:
+                  - entity: binary_sensor.penguin_max_heating_enabled
+                    state: 'on'
+                card:
+                  show_name: false
+                  show_icon: true
+                  type: button
+                  tap_action:
+                    action: toggle
+                  entity: input_boolean.penguin_max_heating
+                  name: Max lämmitys
+                  show_state: false
+              - type: conditional
+                conditions:
+                  - entity: binary_sensor.penguin_max_heating_enabled
+                    state: 'off'
+                card:
+                  show_name: false
+                  show_icon: true
+                  type: button
+                  tap_action:
+                    action: toggle
+                  entity: input_boolean.penguin_max_cooling
+                  name: Max jäähdytys
+                  show_state: false
               - show_name: false
                 show_icon: true
                 type: button
@@ -53,12 +71,6 @@ views:
                   action: toggle
                 icon: mdi:fan-plus
                 entity: input_boolean.penguin_boost
-              - show_name: false
-                show_icon: true
-                type: button
-                tap_action:
-                  action: toggle
-                icon: mdi:stove
           - square: false
             columns: 3
             type: grid

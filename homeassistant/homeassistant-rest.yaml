@@ -94,6 +94,11 @@ rest:
         value_template: "{{ value_json['coils'][3]['value'] }}"
         icon: mdi:fireplace
 
+template:
+  - binary_sensor:
+    - name: "Penguin max heating enabled"
+      state: "{{ states('input_number.penguin_temperature_setting_helper') > states('sensor.penguin_room_temperature_1') }}"
+
 rest_command:
   penguin_circulation_adaptive:
     url: http://IP_ADDRESS:8888/api/v1/coils/11/1
@@ -121,7 +126,15 @@ rest_command:
     url: http://IP_ADDRESS:8888/api/v1/coils/6/0
     method: POST
     icon: mdi:scent-off
-  penguin_max_cooling_toggle:
-    url: http://IP_ADDRESS:8888/api/v1/coils/7
+  penguin_max_cooling_on:
+    url: http://192.168.0.210:8888/api/v1/coils/7/1
     method: POST
-    icon: mdi:snowflake
+  penguin_max_cooling_off:
+    url: http://192.168.0.210:8888/api/v1/coils/7/0
+    method: POST
+  penguin_temperature_up:
+    url: http://192.168.0.210:8888/api/v1/temperature/up
+    method: POST
+  penguin_temperature_down:
+    url: http://192.168.0.210:8888/api/v1/temperature/down
+    method: POST

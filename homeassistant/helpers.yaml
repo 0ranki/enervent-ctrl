@@ -11,6 +11,9 @@ input_boolean:
   penguin_boost:
     name: Penguin Overpressure
     icon: mdi:fan-plus
+  penguin_max_cooling:
+    name: Penguin Max Cooling
+    icon: mdi:snowflake
 input_button:
   penguin_temperature_up:
     name: Penguin temperature up

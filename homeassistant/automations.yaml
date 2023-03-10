@@ -67,6 +67,74 @@ automation:
     mode: single
 
 
+## Max cooling
+  - alias: Penguin max cooling sensor
+    description: ""
+    trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.penguin_max_cooling
+    condition: []
+    action:
+      - if:
+          - condition: state
+            entity_id: binary_sensor.penguin_max_cooling
+            state: "on"
+        then:
+          - service: input_boolean.turn_on
+            data: {}
+            target:
+              entity_id: input_boolean.penguin_max_cooling
+        else:
+          - service: input_boolean.turn_off
+            data: {}
+            target:
+              entity_id: input_boolean.penguin_max_cooling
+    mode: single
+- alias: Penguin max cooling input
+  description: ""
+  trigger:
+    - platform: state
+      entity_id:
+        - input_boolean.penguin_max_cooling
+  condition: []
+  action:
+    - if:
+        - condition: state
+          entity_id: input_boolean.penguin_max_cooling
+          state: "on"
+        - condition: state
+          entity_id: binary_sensor.penguin_max_cooling
+          state: "off"
+        - condition: numeric_state
+          entity_id: sensor.penguin_room_temperature_1
+          above: input_number.penguin_temperature_setting_helper
+      then:
+        - service: rest_command.penguin_max_cooling_on
+          data: {}
+      else: []
+    - if:
+        - condition: state
+          entity_id: input_boolean.penguin_max_cooling
+          state: "off"
+      then:
+        - service: rest_command.penguin_max_cooling_off
+          data: {}
+    - if:
+        - condition: numeric_state
+          entity_id: sensor.penguin_room_temperature_1
+          below: input_number.penguin_temperature_setting_helper
+        - condition: state
+          entity_id: input_boolean.penguin_max_cooling
+          state: "on"
+      then:
+        - service: input_boolean.turn_off
+          data: {}
+          target:
+            entity_id: input_boolean.penguin_max_cooling
+  mode: single
+
+
 ## Circulation fan mode
   - alias: Penguin circulation fan mode
     description: ""
