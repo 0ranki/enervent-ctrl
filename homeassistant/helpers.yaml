@@ -5,6 +5,12 @@ input_boolean:
   penguin_circulation_fan_adaptive:
     name: Penguin Adaptive Circulation Fan
     icon: mdi:fan-auto
+  penguin_overpressure:
+    name: Penguin Overpressure
+    icon: mdi:fireplace
+  penguin_boost:
+    name: Penguin Overpressure
+    icon: mdi:fan-plus
 input_button:
   penguin_temperature_up:
     name: Penguin temperature up

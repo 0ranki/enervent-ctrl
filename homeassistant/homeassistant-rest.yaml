@@ -1,6 +1,6 @@
 rest:
   - resource: http://IP_ADDRESS:8888/api/v1/status
-    scan_interval: 15
+    scan_interval: 5
     sensor:
       - name: "Penguin operating mode"
         value_template: "{{ value_json['op_mode'] }}"
@@ -90,6 +90,9 @@ rest:
       - name: "Penguin boost"
         value_template: "{{ value_json['coils'][10]['value'] }}"
         icon: mdi:fan-plus
+      - name: "Penguin overpressure"
+        value_template: "{{ value_json['coils'][3]['value'] }}"
+        icon: mdi:fireplace
 
 rest_command:
   penguin_circulation_adaptive:
@@ -100,10 +103,12 @@ rest_command:
     url: http://IP_ADDRESS:8888/api/v1/coils/11/0
     method: POST
     icon: mdi:fan
-  penguin_boost_toggle:
-    url: http://IP_ADDRESS:8888/api/v1/coils/10
+  penguin_boost_on:
+    url: http://192.168.0.210:8888/api/v1/coils/10/1
     method: POST
-    icon: mdi:fan-plus
+  penguin_boost_off:
+    url: http://192.168.0.210:8888/api/v1/coils/10/0
+    method: POST
   penguin_overpressure_toggle:
     url: http://IP_ADDRESS:8888/api/v1/coils/3
     method: POST
