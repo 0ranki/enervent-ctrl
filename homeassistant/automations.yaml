@@ -1,4 +1,5 @@
 automation:
+## Modesetting automations
   - alias: Penguin Max Heating input
     description: ""
     trigger:
@@ -63,8 +64,6 @@ automation:
             target:
               entity_id: input_boolean.penguin_max_heating
     mode: single
-
-
   - alias: Penguin circulation fan mode
     description: ""
     trigger:
@@ -88,3 +87,49 @@ automation:
           - service: rest_command.penguin_circulation_manual
             data: {}
     mode: single
+
+## Target temperature setting automations
+- alias: Penguin Temperature setting updater
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - sensor.penguin_temperature_setting
+  condition: []
+  action:
+  - service: input_number.set_value
+    data:
+      value: '{{ states(''sensor.penguin_temperature_setting'') }}'
+    target:
+      entity_id: input_number.penguin_temperature_setting_helper
+  mode: single
+- alias: Penguin temperature up
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - input_button.penguin_temperature_up
+  condition: []
+  action:
+  - service: rest_command.penguin_temperature_up
+    data: {}
+  - service: input_number.increment
+    data: {}
+    target:
+      entity_id: input_number.penguin_temperature_setting_helper
+  mode: single
+- alias: Penguin temperature down
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - input_button.penguin_temperature_down
+  condition: []
+  action:
+  - service: rest_command.penguin_temperature_down
+    data: {}
+  - service: input_number.decrement
+    data: {}
+    target:
+      entity_id: input_number.penguin_temperature_setting_helper
+  mode: single

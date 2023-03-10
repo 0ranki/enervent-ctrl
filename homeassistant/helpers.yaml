@@ -5,3 +5,16 @@ input_boolean:
   penguin_circulation_fan_adaptive:
     name: Penguin Adaptive Circulation Fan
     icon: mdi:fan-auto
+input_button:
+  penguin_temperature_up:
+    name: Penguin temperature up
+    icon: mdi:thermometer-plus
+  penguin_temperature_down:
+    name: Penguin temperature down
+    icon: mdi:thermometer-minus
+input_number:
+  penguin_temperature_setting_helper:
+    name: Penguin temperature setting helper
+    min: 20
+    max: 30
+    unit_of_measurement: "°C"
