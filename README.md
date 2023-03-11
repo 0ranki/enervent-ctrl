@@ -21,3 +21,5 @@ implementation started, a RPi Zero W 1 with a
 connected [Zihatec RS 485 HAT](https://www.hwhardsoft.de/english/projects/rs485-shield/?mobile=1)
 has been used to make sure the daemon stays as
 lightweight as possible.
+
+Pingvin and Kotilämpö are registered trademarks of Enervent Zehnder Oy.
