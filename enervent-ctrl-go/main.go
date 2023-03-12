@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/sha256"
+	"crypto/subtle"
 	"embed"
 	"encoding/json"
 	"flag"
@@ -24,12 +26,53 @@ import (
 var static embed.FS
 
 var (
-	version    = "0.0.19"
-	pingvin    pingvinKL.PingvinKL
-	DEBUG      *bool
-	INTERVAL   *int
-	ACCESS_LOG *bool
+	version      = "0.0.20"
+	pingvin      pingvinKL.PingvinKL
+	DEBUG        *bool
+	INTERVAL     *int
+	ACCESS_LOG   *bool
+	usernamehash [32]byte
+	passwordhash [32]byte
 )
+
+// HTTP Basic Authentication middleware for http.HandlerFunc
+func authHandlerFunc(next http.HandlerFunc) http.HandlerFunc {
+	// Based on https://www.alexedwards.net/blog/basic-authentication-in-go
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user, pass, ok := r.BasicAuth()
+		if ok {
+			userHash := sha256.Sum256([]byte(user))
+			passHash := sha256.Sum256([]byte(pass))
+			usernameMatch := (subtle.ConstantTimeCompare(userHash[:], usernamehash[:]) == 1)
+			passwordMatch := (subtle.ConstantTimeCompare(passHash[:], passwordhash[:]) == 1)
+			if usernameMatch && passwordMatch {
+				next.ServeHTTP(w, r)
+				return
+			}
+		}
+		w.Header().Set("WWW-Authenticate", `Basic realm="restricted", charset="UTF-8"`)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+	})
+}
+
+// HTTP Basic Authentication middleware for http.Handler
+func authHandler(next http.Handler) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user, pass, ok := r.BasicAuth()
+		if ok {
+			userHash := sha256.Sum256([]byte(user))
+			passHash := sha256.Sum256([]byte(pass))
+			usernameMatch := (subtle.ConstantTimeCompare(userHash[:], usernamehash[:]) == 1)
+			passwordMatch := (subtle.ConstantTimeCompare(passHash[:], passwordhash[:]) == 1)
+			if usernameMatch && passwordMatch {
+				next.ServeHTTP(w, r)
+				return
+			}
+		}
+		w.Header().Set("WWW-Authenticate", `Basic realm="restricted", charset="UTF-8"`)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+	})
+}
 
 func coils(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -123,24 +166,27 @@ func temperature(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func listen(cert, key *string) {
+func serve(cert, key *string) {
 	log.Println("Starting pingvinAPI...")
-	http.HandleFunc("/api/v1/coils/", coils)
-	http.HandleFunc("/api/v1/registers/", registers)
-	http.HandleFunc("/api/v1/status", status)
-	http.HandleFunc("/api/v1/temperature/", temperature)
+	http.HandleFunc("/api/v1/coils/", authHandlerFunc(coils))
+	http.HandleFunc("/api/v1/status", authHandlerFunc(status))
+	http.HandleFunc("/api/v1/registers/", authHandlerFunc(registers))
+	http.HandleFunc("/api/v1/temperature/", authHandlerFunc(temperature))
 	html, err := fs.Sub(static, "static/html")
 	if err != nil {
 		log.Fatal(err)
 	}
 	htmlroot := http.FileServer(http.FS(html))
-	http.Handle("/", htmlroot)
-	if *ACCESS_LOG {
-		handler := handlers.LoggingHandler(os.Stdout, http.DefaultServeMux)
-		err = http.ListenAndServeTLS(":8888", *cert, *key, handler)
-	} else {
-		err = http.ListenAndServeTLS(":8888", *cert, *key, nil)
+	http.HandleFunc("/", authHandler(htmlroot))
+	logdst, err := os.OpenFile(os.DevNull, os.O_WRONLY, os.ModeAppend)
+	if err != nil {
+		log.Fatal(err)
 	}
+	if *ACCESS_LOG {
+		logdst = os.Stdout
+	}
+	handler := handlers.LoggingHandler(logdst, http.DefaultServeMux)
+	err = http.ListenAndServeTLS(":8888", *cert, *key, handler)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -185,8 +231,12 @@ func configure() (certfile, keyfile *string) {
 	generatecert := flag.Bool("regenerate-certs", false, "Generate a new SSL certificate. A new one is generated on startup as `~/.config/enervent-ctrl/server.crt` if it doesn't exist.")
 	cert := flag.String("cert", certpath+"certificate.pem", "Path to SSL public key to use for HTTPS")
 	key := flag.String("key", certpath+"privatekey.pem", "Path to SSL private key to use for HTTPS")
+	username := flag.String("username", "pingvin", "Username for HTTP Basic Authentication")
+	password := flag.String("password", "enervent", "Password for HTTP Basic Authentication")
 	// TODO: log file flag
 	flag.Parse()
+	usernamehash = sha256.Sum256([]byte(*username))
+	passwordhash = sha256.Sum256([]byte(*password))
 	// Check that certificate file exists
 	if _, err = os.Stat(*cert); err != nil || *generatecert {
 		generateCertificate(certpath, *cert, *key)
@@ -197,6 +247,7 @@ func configure() (certfile, keyfile *string) {
 	if *ACCESS_LOG {
 		log.Println("HTTP Access logging enabled")
 	}
+
 	log.Println("Update interval set to", *INTERVAL, "seconds")
 	return cert, key
 }
@@ -207,6 +258,6 @@ func main() {
 	pingvin = pingvinKL.New(*DEBUG)
 	pingvin.Update()
 	go pingvin.Monitor(*INTERVAL)
-	listen(cert, key)
+	serve(cert, key)
 	pingvin.Quit()
 }

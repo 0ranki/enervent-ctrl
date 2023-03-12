@@ -2,6 +2,8 @@ rest:
   - resource: https://IP_ADDRESS:8888/api/v1/status
     scan_interval: 5
     verify_ssl: false
+    username: pingvin
+    password: enervent
     sensor:
       - name: "Penguin operating mode"
         value_template: "{{ value_json['op_mode'] }}"
@@ -106,47 +108,69 @@ rest_command:
     method: POST
     icon: mdi:fan-auto
     verify_ssl: false
+    username: pingvin
+    password: enervent
   penguin_circulation_manual:
     url: https://IP_ADDRESS:8888/api/v1/coils/11/0
     method: POST
     icon: mdi:fan
     verify_ssl: false
+    username: pingvin
+    password: enervent
   penguin_boost_on:
     url: https://192.168.0.210:8888/api/v1/coils/10/1
     method: POST
     verify_ssl: false
+    username: pingvin
+    password: enervent
   penguin_boost_off:
     url: https://192.168.0.210:8888/api/v1/coils/10/0
     method: POST
     verify_ssl: false
+    username: pingvin
+    password: enervent
   penguin_overpressure_toggle:
     url: https://IP_ADDRESS:8888/api/v1/coils/3
     method: POST
     icon: mdi:arrow-expand-all
     verify_ssl: false
+    username: pingvin
+    password: enervent
   penguin_max_heating_on:
     url: https://IP_ADDRESS:8888/api/v1/coils/6/1
     method: POST
     icon: mdi:heat-wave
     verify_ssl: false
+    username: pingvin
+    password: enervent
   penguin_max_heating_off:
     url: https://IP_ADDRESS:8888/api/v1/coils/6/0
     method: POST
     icon: mdi:scent-off
     verify_ssl: false
+    username: pingvin
+    password: enervent
   penguin_max_cooling_on:
     url: https://192.168.0.210:8888/api/v1/coils/7/1
     method: POST
     verify_ssl: false
+    username: pingvin
+    password: enervent
   penguin_max_cooling_off:
     url: https://192.168.0.210:8888/api/v1/coils/7/0
     method: POST
     verify_ssl: false
+    username: pingvin
+    password: enervent
   penguin_temperature_up:
     url: https://192.168.0.210:8888/api/v1/temperature/up
     method: POST
     verify_ssl: false
+    username: pingvin
+    password: enervent
   penguin_temperature_down:
     url: https://192.168.0.210:8888/api/v1/temperature/down
     method: POST
     verify_ssl: false
+    username: pingvin
+    password: enervent
