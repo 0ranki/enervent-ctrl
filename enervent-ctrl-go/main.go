@@ -10,9 +10,11 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/0ranki/enervent-ctrl/enervent-ctrl-go/pingvinKL"
 	"github.com/gorilla/handlers"
+	"github.com/rocketlaunchr/https-go"
 )
 
 // Remember to dereference the symbolic links under ./static/html
@@ -22,7 +24,7 @@ import (
 var static embed.FS
 
 var (
-	version    = "0.0.17"
+	version    = "0.0.18"
 	pingvin    pingvinKL.PingvinKL
 	DEBUG      *bool
 	INTERVAL   *int
@@ -144,12 +146,52 @@ func listen() {
 	}
 }
 
+func generateCertificate(certpath, cert, key string) {
+	if _, err := os.Stat(certpath); err != nil {
+		log.Println("Generating configuration directory", certpath)
+		if err := os.MkdirAll(certpath, 0750); err != nil {
+			log.Fatal("Failed to generate configuration directory:", err)
+		}
+	}
+	opts := https.GenerateOptions{Host: "enervent-ctrl.local", RSABits: 4096, ValidFor: 10 * 365 * 24 * time.Hour}
+	log.Println("Generating new self-signed SSL keypair to ", certpath)
+	pub, priv, err := https.GenerateKeys(opts)
+	if err != nil {
+		log.Fatal("Error generating SSL certificate: ", err)
+	}
+	pingvin.Debug.Println("Certificate:\n", string(pub))
+	pingvin.Debug.Println("Key:\n", string(priv))
+	if err := os.WriteFile(key, priv, 0600); err != nil {
+		log.Fatal("Error writing private key ", key, ": ", err)
+	}
+	log.Println("Wrote new SSL private key ", cert)
+	if err := os.WriteFile(cert, pub, 0644); err != nil {
+		log.Fatal("Error writing certificate ", cert, ": ", err)
+	}
+	log.Println("Wrote new SSL public key ", cert)
+}
+
 func configure() {
 	log.Println("Reading configuration")
 	DEBUG = flag.Bool("debug", false, "Enable debug logging")
 	INTERVAL = flag.Int("interval", 4, "Set the interval of background updates")
 	ACCESS_LOG = flag.Bool("httplog", false, "Enable HTTP access logging")
+	generatecert := flag.Bool("regenerate-certs", false, "Generate a new SSL certificate. A new one is generated on startup as `~/.config/enervent-ctrl/server.crt` if it doesn't exist.")
+	// TODO: flag for cerificate path
+	// TODO: log file flag
 	flag.Parse()
+	// Get the user home directory path
+	homedir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal("Could not determine user home directory")
+	}
+	certpath := homedir + "/.config/enervent-ctrl/"
+	cert := certpath + "certificate.pem"
+	key := certpath + "privatekey.pem"
+	// Check that certificate file exists
+	if _, err = os.Stat(cert); err != nil || *generatecert {
+		generateCertificate(certpath, cert, key)
+	}
 	if *DEBUG {
 		log.Println("Debug logging enabled")
 	}
