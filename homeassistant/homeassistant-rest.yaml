@@ -1,6 +1,7 @@
 rest:
-  - resource: http://IP_ADDRESS:8888/api/v1/status
+  - resource: https://IP_ADDRESS:8888/api/v1/status
     scan_interval: 5
+    verify_ssl: false
     sensor:
       - name: "Penguin operating mode"
         value_template: "{{ value_json['op_mode'] }}"
@@ -101,40 +102,51 @@ template:
 
 rest_command:
   penguin_circulation_adaptive:
-    url: http://IP_ADDRESS:8888/api/v1/coils/11/1
+    url: https://IP_ADDRESS:8888/api/v1/coils/11/1
     method: POST
     icon: mdi:fan-auto
+    verify_ssl: false
   penguin_circulation_manual:
-    url: http://IP_ADDRESS:8888/api/v1/coils/11/0
+    url: https://IP_ADDRESS:8888/api/v1/coils/11/0
     method: POST
     icon: mdi:fan
+    verify_ssl: false
   penguin_boost_on:
-    url: http://192.168.0.210:8888/api/v1/coils/10/1
+    url: https://192.168.0.210:8888/api/v1/coils/10/1
     method: POST
+    verify_ssl: false
   penguin_boost_off:
-    url: http://192.168.0.210:8888/api/v1/coils/10/0
+    url: https://192.168.0.210:8888/api/v1/coils/10/0
     method: POST
+    verify_ssl: false
   penguin_overpressure_toggle:
-    url: http://IP_ADDRESS:8888/api/v1/coils/3
+    url: https://IP_ADDRESS:8888/api/v1/coils/3
     method: POST
     icon: mdi:arrow-expand-all
+    verify_ssl: false
   penguin_max_heating_on:
-    url: http://IP_ADDRESS:8888/api/v1/coils/6/1
+    url: https://IP_ADDRESS:8888/api/v1/coils/6/1
     method: POST
     icon: mdi:heat-wave
+    verify_ssl: false
   penguin_max_heating_off:
-    url: http://IP_ADDRESS:8888/api/v1/coils/6/0
+    url: https://IP_ADDRESS:8888/api/v1/coils/6/0
     method: POST
     icon: mdi:scent-off
+    verify_ssl: false
   penguin_max_cooling_on:
-    url: http://192.168.0.210:8888/api/v1/coils/7/1
+    url: https://192.168.0.210:8888/api/v1/coils/7/1
     method: POST
+    verify_ssl: false
   penguin_max_cooling_off:
-    url: http://192.168.0.210:8888/api/v1/coils/7/0
+    url: https://192.168.0.210:8888/api/v1/coils/7/0
     method: POST
+    verify_ssl: false
   penguin_temperature_up:
-    url: http://192.168.0.210:8888/api/v1/temperature/up
+    url: https://192.168.0.210:8888/api/v1/temperature/up
     method: POST
+    verify_ssl: false
   penguin_temperature_down:
-    url: http://192.168.0.210:8888/api/v1/temperature/down
+    url: https://192.168.0.210:8888/api/v1/temperature/down
     method: POST
+    verify_ssl: false
