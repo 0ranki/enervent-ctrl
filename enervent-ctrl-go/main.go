@@ -24,7 +24,7 @@ import (
 var static embed.FS
 
 var (
-	version    = "0.0.18"
+	version    = "0.0.19"
 	pingvin    pingvinKL.PingvinKL
 	DEBUG      *bool
 	INTERVAL   *int
@@ -123,7 +123,7 @@ func temperature(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func listen() {
+func listen(cert, key *string) {
 	log.Println("Starting pingvinAPI...")
 	http.HandleFunc("/api/v1/coils/", coils)
 	http.HandleFunc("/api/v1/registers/", registers)
@@ -137,9 +137,9 @@ func listen() {
 	http.Handle("/", htmlroot)
 	if *ACCESS_LOG {
 		handler := handlers.LoggingHandler(os.Stdout, http.DefaultServeMux)
-		err = http.ListenAndServe(":8888", handler)
+		err = http.ListenAndServeTLS(":8888", *cert, *key, handler)
 	} else {
-		err = http.ListenAndServe(":8888", nil)
+		err = http.ListenAndServeTLS(":8888", *cert, *key, nil)
 	}
 	if err != nil {
 		log.Fatal(err)
@@ -171,26 +171,25 @@ func generateCertificate(certpath, cert, key string) {
 	log.Println("Wrote new SSL public key ", cert)
 }
 
-func configure() {
+func configure() (certfile, keyfile *string) {
 	log.Println("Reading configuration")
-	DEBUG = flag.Bool("debug", false, "Enable debug logging")
-	INTERVAL = flag.Int("interval", 4, "Set the interval of background updates")
-	ACCESS_LOG = flag.Bool("httplog", false, "Enable HTTP access logging")
-	generatecert := flag.Bool("regenerate-certs", false, "Generate a new SSL certificate. A new one is generated on startup as `~/.config/enervent-ctrl/server.crt` if it doesn't exist.")
-	// TODO: flag for cerificate path
-	// TODO: log file flag
-	flag.Parse()
 	// Get the user home directory path
 	homedir, err := os.UserHomeDir()
 	if err != nil {
 		log.Fatal("Could not determine user home directory")
 	}
 	certpath := homedir + "/.config/enervent-ctrl/"
-	cert := certpath + "certificate.pem"
-	key := certpath + "privatekey.pem"
+	DEBUG = flag.Bool("debug", false, "Enable debug logging")
+	INTERVAL = flag.Int("interval", 4, "Set the interval of background updates")
+	ACCESS_LOG = flag.Bool("httplog", false, "Enable HTTP access logging")
+	generatecert := flag.Bool("regenerate-certs", false, "Generate a new SSL certificate. A new one is generated on startup as `~/.config/enervent-ctrl/server.crt` if it doesn't exist.")
+	cert := flag.String("cert", certpath+"certificate.pem", "Path to SSL public key to use for HTTPS")
+	key := flag.String("key", certpath+"privatekey.pem", "Path to SSL private key to use for HTTPS")
+	// TODO: log file flag
+	flag.Parse()
 	// Check that certificate file exists
-	if _, err = os.Stat(cert); err != nil || *generatecert {
-		generateCertificate(certpath, cert, key)
+	if _, err = os.Stat(*cert); err != nil || *generatecert {
+		generateCertificate(certpath, *cert, *key)
 	}
 	if *DEBUG {
 		log.Println("Debug logging enabled")
@@ -199,14 +198,15 @@ func configure() {
 		log.Println("HTTP Access logging enabled")
 	}
 	log.Println("Update interval set to", *INTERVAL, "seconds")
+	return cert, key
 }
 
 func main() {
 	log.Println("enervent-ctrl version", version)
-	configure()
+	cert, key := configure()
 	pingvin = pingvinKL.New(*DEBUG)
 	pingvin.Update()
 	go pingvin.Monitor(*INTERVAL)
-	listen()
+	listen(cert, key)
 	pingvin.Quit()
 }
