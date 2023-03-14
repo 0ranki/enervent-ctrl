@@ -573,27 +573,7 @@ func (p *PingvinKL) Monitor(interval int) {
 	}
 }
 
-// func (p *PingvinKL) Describe(ch chan<- *prometheus.Desc) {
-
-// }
-
-func (p *PingvinKL) prometheusRegister() {
-	for _, hreg := range p.Registers {
-		hreg.PromDesc = prometheus.NewDesc(
-			prometheus.BuildFQName("", "pingvin", strings.ToLower(hreg.Symbol)),
-			hreg.Description,
-			nil,
-			nil,
-		)
-
-	}
-	// prometheus.MustRegister(
-	// 	// collectors.NewGoCollector(),
-	// 	// collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
-	// 	p,
-	// )
-}
-
+// Implements prometheus.Describe()
 func (p *PingvinKL) Describe(ch chan<- *prometheus.Desc) {
 	for _, hreg := range p.Registers {
 		if !hreg.Reserved {
@@ -607,6 +587,7 @@ func (p *PingvinKL) Describe(ch chan<- *prometheus.Desc) {
 	}
 }
 
+// Implements prometheus.Collect()
 func (p *PingvinKL) Collect(ch chan<- prometheus.Metric) {
 	for _, hreg := range p.Registers {
 		if !hreg.Reserved {
@@ -632,22 +613,6 @@ func (p *PingvinKL) Collect(ch chan<- prometheus.Metric) {
 	}
 }
 
-// 	for _, coil := range p.Coils {
-// 		if coil.Reserved {
-// 			continue
-// 		}
-// 		if err := p.Promreg.Register(prometheus.NewGauge(
-// 			prometheus.GaugeOpts{
-// 				Subsystem: "pingvin",
-// 				Name:      strings.ToLower(coil.Symbol),
-// 				Help:      coil.Description,
-// 			},
-// 		)); err == nil {
-// 			p.Debug.Println("GaugeFunc pingvin_"+coil.Symbol, "registered.")
-// 		}
-// 	}
-// }
-
 // create a PingvinKL struct, read coils and registers from CSVs
 func New(debug bool) PingvinKL {
 	pingvin := PingvinKL{}
@@ -667,6 +632,5 @@ func New(debug bool) PingvinKL {
 			newRegister(registerData[i][0], registerData[i][1], registerData[i][2], registerData[i][3], registerData[i][6]))
 	}
 	log.Println("Parsed", len(pingvin.Registers), "registers")
-	// pingvin.prometheusRegister()
 	return pingvin
 }

@@ -44,6 +44,7 @@ type Conf struct {
 	Username       string `yaml:"username"`
 	Password       string `yaml:"password"`
 	Interval       int    `yaml:"interval"`
+	EnableMetrics  bool   `yaml:"enable_metrics"`
 	LogAccess      bool   `yaml:"log_access"`
 	Debug          bool   `yaml:"debug"`
 }
@@ -198,7 +199,9 @@ func serve(cert, key *string) {
 	http.HandleFunc("/api/v1/status", authHandlerFunc(status))
 	http.HandleFunc("/api/v1/registers/", authHandlerFunc(registers))
 	http.HandleFunc("/api/v1/temperature/", authHandlerFunc(temperature))
-	http.Handle("/metrics", promhttp.Handler())
+	if config.EnableMetrics {
+		http.Handle("/metrics", promhttp.Handler())
+	}
 	html, err := fs.Sub(static, "static/html")
 	if err != nil {
 		log.Fatal(err)
@@ -280,6 +283,7 @@ func initDefaultConfig(confpath string) {
 		4,
 		false,
 		false,
+		false,
 	}
 	conffile := confpath + "/configuration.yaml"
 	confbytes, err := yaml.Marshal(&config)
@@ -303,6 +307,7 @@ func configure() {
 	keyflag := flag.String("key", config.SslPrivatekey, "Path to SSL private key to use for HTTPS")
 	usernflag := flag.String("username", config.Username, "Username for HTTP Basic Authentication")
 	passwflag := flag.String("password", config.Password, "Password for HTTP Basic Authentication")
+	promflag := flag.Bool("enable-metrics", config.EnableMetrics, "Enable the built-in Prometheus exporter")
 	// TODO: log file flag
 	flag.Parse()
 	config.Debug = *debugflag
@@ -312,6 +317,7 @@ func configure() {
 	config.SslPrivatekey = *keyflag
 	config.Username = *usernflag
 	config.Password = *passwflag
+	config.EnableMetrics = *promflag
 	usernamehash = sha256.Sum256([]byte(config.Username))
 	passwordhash = sha256.Sum256([]byte(config.Password))
 	// Check that certificate file exists, generate if needed
@@ -327,7 +333,9 @@ func configure() {
 		log.Println("HTTP Access logging enabled")
 	}
 	log.Println("Update interval set to", config.Interval, "seconds")
-	prometheus.MustRegister(&pingvin)
+	if config.EnableMetrics {
+		prometheus.MustRegister(&pingvin)
+	}
 }
 
 func main() {
