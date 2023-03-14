@@ -18,6 +18,8 @@ import (
 	"github.com/0ranki/enervent-ctrl/enervent-ctrl-go/pingvinKL"
 	"github.com/0ranki/https-go"
 	"github.com/gorilla/handlers"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"gopkg.in/yaml.v3"
 )
 
@@ -28,7 +30,7 @@ import (
 var static embed.FS
 
 var (
-	version      = "0.0.22"
+	version      = "0.0.23"
 	pingvin      pingvinKL.PingvinKL
 	config       Conf
 	usernamehash [32]byte
@@ -196,6 +198,7 @@ func serve(cert, key *string) {
 	http.HandleFunc("/api/v1/status", authHandlerFunc(status))
 	http.HandleFunc("/api/v1/registers/", authHandlerFunc(registers))
 	http.HandleFunc("/api/v1/temperature/", authHandlerFunc(temperature))
+	http.Handle("/metrics", promhttp.Handler())
 	html, err := fs.Sub(static, "static/html")
 	if err != nil {
 		log.Fatal(err)
@@ -324,6 +327,7 @@ func configure() {
 		log.Println("HTTP Access logging enabled")
 	}
 	log.Println("Update interval set to", config.Interval, "seconds")
+	prometheus.MustRegister(&pingvin)
 }
 
 func main() {
