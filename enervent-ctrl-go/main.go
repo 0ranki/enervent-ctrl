@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"flag"
 	"io/fs"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -17,6 +18,7 @@ import (
 	"github.com/0ranki/enervent-ctrl/enervent-ctrl-go/pingvinKL"
 	"github.com/0ranki/https-go"
 	"github.com/gorilla/handlers"
+	"gopkg.in/yaml.v3"
 )
 
 // Remember to dereference the symbolic links under ./static/html
@@ -26,14 +28,23 @@ import (
 var static embed.FS
 
 var (
-	version      = "0.0.21"
+	version      = "0.0.22"
 	pingvin      pingvinKL.PingvinKL
-	DEBUG        *bool
-	INTERVAL     *int
-	ACCESS_LOG   *bool
+	config       Conf
 	usernamehash [32]byte
 	passwordhash [32]byte
 )
+
+type Conf struct {
+	Port           int    `yaml:"port"`
+	SslCertificate string `yaml:"ssl_certificate"`
+	SslPrivatekey  string `yaml:"ssl_privatekey"`
+	Username       string `yaml:"username"`
+	Password       string `yaml:"password"`
+	Interval       int    `yaml:"interval"`
+	LogAccess      bool   `yaml:"log_access"`
+	Debug          bool   `yaml:"debug"`
+}
 
 // HTTP Basic Authentication middleware for http.HandlerFunc
 func authHandlerFunc(next http.HandlerFunc) http.HandlerFunc {
@@ -82,6 +93,7 @@ func authHandler(next http.Handler) http.HandlerFunc {
 	})
 }
 
+// \/api/v1/coils endpoint
 func coils(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	pathparams := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/coils/"), "/")
@@ -123,6 +135,7 @@ func coils(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// \/api/v1/registers endpoint
 func registers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	pathparams := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/registers/"), "/")
@@ -158,11 +171,13 @@ func registers(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// \/status endpoint
 func status(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(pingvin.Status)
 }
 
+// \/api/v1/temperature endpoint
 func temperature(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	pathparams := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/temperature/"), "/")
@@ -174,6 +189,7 @@ func temperature(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Start the HTTP server
 func serve(cert, key *string) {
 	log.Println("Starting pingvinAPI...")
 	http.HandleFunc("/api/v1/coils/", authHandlerFunc(coils))
@@ -190,7 +206,7 @@ func serve(cert, key *string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	if *ACCESS_LOG {
+	if config.LogAccess {
 		logdst = os.Stdout
 	}
 	handler := handlers.LoggingHandler(logdst, http.DefaultServeMux)
@@ -200,15 +216,10 @@ func serve(cert, key *string) {
 	}
 }
 
-func generateCertificate(certpath, cert, key string) {
-	if _, err := os.Stat(certpath); err != nil {
-		log.Println("Generating configuration directory", certpath)
-		if err := os.MkdirAll(certpath, 0750); err != nil {
-			log.Fatal("Failed to generate configuration directory:", err)
-		}
-	}
+// Generate self-signed SSL keypair
+func generateCertificate(cert, key string) {
 	opts := https.GenerateOptions{Host: "enervent-ctrl.local", RSABits: 4096, ValidFor: 10 * 365 * 24 * time.Hour}
-	log.Println("Generating new self-signed SSL keypair to ", certpath)
+	log.Println("Generating new self-signed SSL keypair")
 	log.Println("This may take a while...")
 	pub, priv, err := https.GenerateKeys(opts)
 	if err != nil {
@@ -226,47 +237,101 @@ func generateCertificate(certpath, cert, key string) {
 	log.Println("Wrote new SSL public key ", cert)
 }
 
-func configure() (certfile, keyfile *string) {
-	log.Println("Reading configuration")
-	// Get the user home directory path
+// Read & parse the configuration file
+func parseConfigFile() {
 	homedir, err := os.UserHomeDir()
 	if err != nil {
 		log.Fatal("Could not determine user home directory")
 	}
-	certpath := homedir + "/.config/enervent-ctrl/"
-	DEBUG = flag.Bool("debug", false, "Enable debug logging")
-	INTERVAL = flag.Int("interval", 4, "Set the interval of background updates")
-	ACCESS_LOG = flag.Bool("httplog", false, "Enable HTTP access logging")
+	confpath := homedir + "/.config/enervent-ctrl"
+	if _, err := os.Stat(confpath); err != nil {
+		log.Println("Generating configuration directory", confpath)
+		if err := os.MkdirAll(confpath, 0700); err != nil {
+			log.Fatal("Failed to generate configuration directory:", err)
+		}
+	}
+	conffile := confpath + "/configuration.yaml"
+	yamldata, err := ioutil.ReadFile(conffile)
+	if err != nil {
+		log.Println("Configuration file", conffile, "not found")
+		log.Println("Generating", conffile, "with default values")
+		initDefaultConfig(confpath)
+		if yamldata, err = ioutil.ReadFile(conffile); err != nil {
+			log.Fatal("Error parsing configuration:", err)
+		}
+	}
+	err = yaml.Unmarshal(yamldata, &config)
+	if err != nil {
+		log.Fatal("Failed to parse YAML:", err)
+	}
+}
+
+// Write the default configuration to $HOME/.config/enervent-ctrl/configuration.yaml
+func initDefaultConfig(confpath string) {
+	config = Conf{
+		8888,
+		confpath + "/certificate.pem",
+		confpath + "/privatekey.pem",
+		"pingvin",
+		"enervent",
+		4,
+		false,
+		false,
+	}
+	conffile := confpath + "/configuration.yaml"
+	confbytes, err := yaml.Marshal(&config)
+	if err != nil {
+		log.Println("Error writing default configuration:", err)
+	}
+	if err := os.WriteFile(conffile, confbytes, 0600); err != nil {
+		log.Fatal("Failed to write default configuration:", err)
+	}
+}
+
+// Read configuration. CLI flags take presedence over configuration file
+func configure() {
+	log.Println("Reading configuration")
+	parseConfigFile()
+	debugflag := flag.Bool("debug", config.Debug, "Enable debug logging")
+	intervalflag := flag.Int("interval", config.Interval, "Set the interval of background updates")
+	logaccflag := flag.Bool("httplog", config.LogAccess, "Enable HTTP access logging")
 	generatecert := flag.Bool("regenerate-certs", false, "Generate a new SSL certificate. A new one is generated on startup as `~/.config/enervent-ctrl/server.crt` if it doesn't exist.")
-	cert := flag.String("cert", certpath+"certificate.pem", "Path to SSL public key to use for HTTPS")
-	key := flag.String("key", certpath+"privatekey.pem", "Path to SSL private key to use for HTTPS")
-	username := flag.String("username", "pingvin", "Username for HTTP Basic Authentication")
-	password := flag.String("password", "enervent", "Password for HTTP Basic Authentication")
+	certflag := flag.String("cert", config.SslCertificate, "Path to SSL public key to use for HTTPS")
+	keyflag := flag.String("key", config.SslPrivatekey, "Path to SSL private key to use for HTTPS")
+	usernflag := flag.String("username", config.Username, "Username for HTTP Basic Authentication")
+	passwflag := flag.String("password", config.Password, "Password for HTTP Basic Authentication")
 	// TODO: log file flag
 	flag.Parse()
-	usernamehash = sha256.Sum256([]byte(*username))
-	passwordhash = sha256.Sum256([]byte(*password))
-	// Check that certificate file exists
-	if _, err = os.Stat(*cert); err != nil || *generatecert {
-		generateCertificate(certpath, *cert, *key)
+	config.Debug = *debugflag
+	config.Interval = *intervalflag
+	config.LogAccess = *logaccflag
+	config.SslCertificate = *certflag
+	config.SslPrivatekey = *keyflag
+	config.Username = *usernflag
+	config.Password = *passwflag
+	usernamehash = sha256.Sum256([]byte(config.Username))
+	passwordhash = sha256.Sum256([]byte(config.Password))
+	// Check that certificate file exists, generate if needed
+	if _, err := os.Stat(config.SslCertificate); err != nil || *generatecert {
+		generateCertificate(config.SslCertificate, config.SslPrivatekey)
 	}
-	if *DEBUG {
+	// Enable debug if configured
+	if config.Debug {
 		log.Println("Debug logging enabled")
 	}
-	if *ACCESS_LOG {
+	// Enable HTTP access logging if configured
+	if config.LogAccess {
 		log.Println("HTTP Access logging enabled")
 	}
-
-	log.Println("Update interval set to", *INTERVAL, "seconds")
-	return cert, key
+	log.Println("Update interval set to", config.Interval, "seconds")
 }
 
 func main() {
 	log.Println("enervent-ctrl version", version)
-	cert, key := configure()
-	pingvin = pingvinKL.New(*DEBUG)
+	configure()
+	pingvin = pingvinKL.New(config.Debug)
 	pingvin.Update()
-	go pingvin.Monitor(*INTERVAL)
-	serve(cert, key)
+	go pingvin.Monitor(config.Interval)
+	serve(&config.SslCertificate, &config.SslPrivatekey)
 	pingvin.Quit()
 }
