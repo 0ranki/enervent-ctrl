@@ -11,15 +11,17 @@ import (
 	"time"
 
 	"github.com/goburrow/modbus"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 // single coil data
 type pingvinCoil struct {
-	Address     int    `json:"address"`
-	Symbol      string `json:"symbol"`
-	Value       bool   `json:"value"`
-	Description string `json:"description"`
-	Reserved    bool   `json:"reserved"`
+	Address     int              `json:"address"`
+	Symbol      string           `json:"symbol"`
+	Value       bool             `json:"value"`
+	Description string           `json:"description"`
+	Reserved    bool             `json:"reserved"`
+	PromDesc    *prometheus.Desc `json:"-"`
 }
 
 // unit modbus data
@@ -36,14 +38,15 @@ type PingvinKL struct {
 
 // single register data
 type pingvinRegister struct {
-	Address     int    `json:"address"`
-	Symbol      string `json:"symbol"`
-	Value       int    `json:"value"`
-	Bitfield    string `json:"bitfield"`
-	Type        string `json:"type"`
-	Description string `json:"description"`
-	Reserved    bool   `json:"reserved"`
-	Multiplier  int    `json:"multiplier"`
+	Address     int              `json:"address"`
+	Symbol      string           `json:"symbol"`
+	Value       int              `json:"value"`
+	Bitfield    string           `json:"bitfield"`
+	Type        string           `json:"type"`
+	Description string           `json:"description"`
+	Reserved    bool             `json:"reserved"`
+	Multiplier  int              `json:"multiplier"`
+	PromDesc    *prometheus.Desc `json:"-"`
 }
 
 type pingvinMeasurements struct {
@@ -105,8 +108,20 @@ func newCoil(address string, symbol string, description string) pingvinCoil {
 		log.Fatal("newCoil: Atoi: ", err)
 	}
 	reserved := symbol == "-" && description == "-"
-	coil := pingvinCoil{addr, symbol, false, description, reserved}
-	return coil
+	if !reserved {
+		promdesc := strings.ToLower(symbol)
+		zpadaddr := fmt.Sprintf("%02d", addr)
+		promdesc = strings.Replace(promdesc, "_", "_"+zpadaddr+"_", 1)
+		return pingvinCoil{addr, symbol, false, description, reserved,
+			prometheus.NewDesc(
+				prometheus.BuildFQName("", "pingvin", promdesc),
+				description,
+				nil,
+				nil,
+			),
+		}
+	}
+	return pingvinCoil{addr, symbol, false, description, reserved, nil}
 }
 
 func newRegister(address, symbol, typ, multiplier, description string) pingvinRegister {
@@ -122,8 +137,29 @@ func newRegister(address, symbol, typ, multiplier, description string) pingvinRe
 		}
 	}
 	reserved := symbol == "Reserved" && description == "Reserved"
-	register := pingvinRegister{addr, symbol, 0, "0000000000000000", typ, description, reserved, multipl}
-	return register
+
+	if !reserved {
+		promdesc := strings.ToLower(symbol)
+		zpadaddr := fmt.Sprintf("%03d", addr)
+		promdesc = strings.Replace(promdesc, "_", "_"+zpadaddr+"_", 1)
+		return pingvinRegister{
+			addr,
+			symbol,
+			0,
+			"0000000000000000",
+			typ,
+			description,
+			reserved,
+			multipl,
+			prometheus.NewDesc(
+				prometheus.BuildFQName("", "pingvin", promdesc),
+				description,
+				nil,
+				nil,
+			),
+		}
+	}
+	return pingvinRegister{addr, symbol, 0, "0000000000000000", typ, description, reserved, multipl, nil}
 }
 
 // read a CSV file containing data for coils or registers
@@ -534,6 +570,46 @@ func (p *PingvinKL) Monitor(interval int) {
 		time.Sleep(time.Duration(interval) * time.Second)
 		p.Debug.Println("Updating values")
 		p.Update()
+	}
+}
+
+// Implements prometheus.Describe()
+func (p *PingvinKL) Describe(ch chan<- *prometheus.Desc) {
+	for _, hreg := range p.Registers {
+		if !hreg.Reserved {
+			ch <- hreg.PromDesc
+		}
+	}
+	for _, coil := range p.Coils {
+		if !coil.Reserved {
+			ch <- coil.PromDesc
+		}
+	}
+}
+
+// Implements prometheus.Collect()
+func (p *PingvinKL) Collect(ch chan<- prometheus.Metric) {
+	for _, hreg := range p.Registers {
+		if !hreg.Reserved {
+			ch <- prometheus.MustNewConstMetric(
+				hreg.PromDesc,
+				prometheus.GaugeValue,
+				float64(hreg.Value)/float64(hreg.Multiplier),
+			)
+		}
+	}
+	for _, coil := range p.Coils {
+		val := 0
+		if coil.Value {
+			val = 1
+		}
+		if !coil.Reserved {
+			ch <- prometheus.MustNewConstMetric(
+				coil.PromDesc,
+				prometheus.GaugeValue,
+				float64(val),
+			)
+		}
 	}
 }
 

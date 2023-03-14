@@ -18,6 +18,8 @@ import (
 	"github.com/0ranki/enervent-ctrl/enervent-ctrl-go/pingvinKL"
 	"github.com/0ranki/https-go"
 	"github.com/gorilla/handlers"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"gopkg.in/yaml.v3"
 )
 
@@ -28,7 +30,7 @@ import (
 var static embed.FS
 
 var (
-	version      = "0.0.22"
+	version      = "0.0.23"
 	pingvin      pingvinKL.PingvinKL
 	config       Conf
 	usernamehash [32]byte
@@ -42,6 +44,7 @@ type Conf struct {
 	Username       string `yaml:"username"`
 	Password       string `yaml:"password"`
 	Interval       int    `yaml:"interval"`
+	EnableMetrics  bool   `yaml:"enable_metrics"`
 	LogAccess      bool   `yaml:"log_access"`
 	Debug          bool   `yaml:"debug"`
 }
@@ -196,6 +199,9 @@ func serve(cert, key *string) {
 	http.HandleFunc("/api/v1/status", authHandlerFunc(status))
 	http.HandleFunc("/api/v1/registers/", authHandlerFunc(registers))
 	http.HandleFunc("/api/v1/temperature/", authHandlerFunc(temperature))
+	if config.EnableMetrics {
+		http.Handle("/metrics", promhttp.Handler())
+	}
 	html, err := fs.Sub(static, "static/html")
 	if err != nil {
 		log.Fatal(err)
@@ -277,6 +283,7 @@ func initDefaultConfig(confpath string) {
 		4,
 		false,
 		false,
+		false,
 	}
 	conffile := confpath + "/configuration.yaml"
 	confbytes, err := yaml.Marshal(&config)
@@ -300,6 +307,7 @@ func configure() {
 	keyflag := flag.String("key", config.SslPrivatekey, "Path to SSL private key to use for HTTPS")
 	usernflag := flag.String("username", config.Username, "Username for HTTP Basic Authentication")
 	passwflag := flag.String("password", config.Password, "Password for HTTP Basic Authentication")
+	promflag := flag.Bool("enable-metrics", config.EnableMetrics, "Enable the built-in Prometheus exporter")
 	// TODO: log file flag
 	flag.Parse()
 	config.Debug = *debugflag
@@ -309,6 +317,7 @@ func configure() {
 	config.SslPrivatekey = *keyflag
 	config.Username = *usernflag
 	config.Password = *passwflag
+	config.EnableMetrics = *promflag
 	usernamehash = sha256.Sum256([]byte(config.Username))
 	passwordhash = sha256.Sum256([]byte(config.Password))
 	// Check that certificate file exists, generate if needed
@@ -324,6 +333,9 @@ func configure() {
 		log.Println("HTTP Access logging enabled")
 	}
 	log.Println("Update interval set to", config.Interval, "seconds")
+	if config.EnableMetrics {
+		prometheus.MustRegister(&pingvin)
+	}
 }
 
 func main() {

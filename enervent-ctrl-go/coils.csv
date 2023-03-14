@@ -36,7 +36,7 @@
 35;-;-
 36;COIL_TEMP_DECREASE;Temperature decrease function desc
 37;COIL_OVERTIME;Programmatic equivalent of OVERTIME digital input.
-38;-;Emergency stop switch type desc
+38;COIL_EMERG_STOP;Emergency stop switch type desc
 39;-;-
 40;COIL_ECO_MODE;Eco mode desc
 41;COIL_ALARM_A;Alarm of class A active desc
