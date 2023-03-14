@@ -45,6 +45,7 @@ type Conf struct {
 	Password       string `yaml:"password"`
 	Interval       int    `yaml:"interval"`
 	EnableMetrics  bool   `yaml:"enable_metrics"`
+	LogFile        string `yaml:"log_file"`
 	LogAccess      bool   `yaml:"log_access"`
 	Debug          bool   `yaml:"debug"`
 }
@@ -282,6 +283,7 @@ func initDefaultConfig(confpath string) {
 		"enervent",
 		4,
 		false,
+		"",
 		false,
 		false,
 	}
@@ -308,6 +310,7 @@ func configure() {
 	usernflag := flag.String("username", config.Username, "Username for HTTP Basic Authentication")
 	passwflag := flag.String("password", config.Password, "Password for HTTP Basic Authentication")
 	promflag := flag.Bool("enable-metrics", config.EnableMetrics, "Enable the built-in Prometheus exporter")
+	logflag := flag.String("logfile", config.LogFile, "Path to log file. Default is empty string, log to stdout")
 	// TODO: log file flag
 	flag.Parse()
 	config.Debug = *debugflag
@@ -318,8 +321,17 @@ func configure() {
 	config.Username = *usernflag
 	config.Password = *passwflag
 	config.EnableMetrics = *promflag
+	config.LogFile = *logflag
 	usernamehash = sha256.Sum256([]byte(config.Username))
 	passwordhash = sha256.Sum256([]byte(config.Password))
+	if len(config.LogFile) != 0 {
+		logfile, err := os.OpenFile(config.LogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0640)
+		if err != nil {
+			log.Fatal("Failed to open log file", config.LogFile)
+		}
+		log.SetOutput(logfile)
+		log.Println("Opened logfile")
+	}
 	// Check that certificate file exists, generate if needed
 	if _, err := os.Stat(config.SslCertificate); err != nil || *generatecert {
 		generateCertificate(config.SslCertificate, config.SslPrivatekey)
@@ -334,6 +346,7 @@ func configure() {
 	}
 	log.Println("Update interval set to", config.Interval, "seconds")
 	if config.EnableMetrics {
+		log.Println("Prometheus exporter enabled (/metrics)")
 		prometheus.MustRegister(&pingvin)
 	}
 }
