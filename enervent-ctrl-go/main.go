@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/sha256"
+	"crypto/subtle"
 	"embed"
 	"encoding/json"
 	"flag"
@@ -10,8 +12,10 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/0ranki/enervent-ctrl/enervent-ctrl-go/pingvinKL"
+	"github.com/0ranki/https-go"
 	"github.com/gorilla/handlers"
 )
 
@@ -22,12 +26,61 @@ import (
 var static embed.FS
 
 var (
-	version    = "0.0.17"
-	pingvin    pingvinKL.PingvinKL
-	DEBUG      *bool
-	INTERVAL   *int
-	ACCESS_LOG *bool
+	version      = "0.0.21"
+	pingvin      pingvinKL.PingvinKL
+	DEBUG        *bool
+	INTERVAL     *int
+	ACCESS_LOG   *bool
+	usernamehash [32]byte
+	passwordhash [32]byte
 )
+
+// HTTP Basic Authentication middleware for http.HandlerFunc
+func authHandlerFunc(next http.HandlerFunc) http.HandlerFunc {
+	// Based on https://www.alexedwards.net/blog/basic-authentication-in-go
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user, pass, ok := r.BasicAuth()
+		if ok {
+			userHash := sha256.Sum256([]byte(user))
+			passHash := sha256.Sum256([]byte(pass))
+			usernameMatch := (subtle.ConstantTimeCompare(userHash[:], usernamehash[:]) == 1)
+			passwordMatch := (subtle.ConstantTimeCompare(passHash[:], passwordhash[:]) == 1)
+			if usernameMatch && passwordMatch {
+				next.ServeHTTP(w, r)
+				return
+			}
+		}
+		if len(user) == 0 {
+			user = "-"
+		}
+		log.Println("Authentication failed: IP:", r.RemoteAddr, "URI:", r.RequestURI, "username:", user)
+		w.Header().Set("WWW-Authenticate", `Basic realm="restricted", charset="UTF-8"`)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+	})
+}
+
+// HTTP Basic Authentication middleware for http.Handler
+func authHandler(next http.Handler) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user, pass, ok := r.BasicAuth()
+		if ok {
+			userHash := sha256.Sum256([]byte(user))
+			passHash := sha256.Sum256([]byte(pass))
+			usernameMatch := (subtle.ConstantTimeCompare(userHash[:], usernamehash[:]) == 1)
+			passwordMatch := (subtle.ConstantTimeCompare(passHash[:], passwordhash[:]) == 1)
+			if usernameMatch && passwordMatch {
+				next.ServeHTTP(w, r)
+				return
+			}
+		}
+		if len(user) == 0 {
+			user = "-"
+		}
+		log.Println("Authentication failed: IP:", r.RemoteAddr, "URI:", r.RequestURI, "username:", user)
+		w.Header().Set("WWW-Authenticate", `Basic realm="restricted", charset="UTF-8"`)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+	})
+}
 
 func coils(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -121,50 +174,99 @@ func temperature(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func listen() {
+func serve(cert, key *string) {
 	log.Println("Starting pingvinAPI...")
-	http.HandleFunc("/api/v1/coils/", coils)
-	http.HandleFunc("/api/v1/registers/", registers)
-	http.HandleFunc("/api/v1/status", status)
-	http.HandleFunc("/api/v1/temperature/", temperature)
+	http.HandleFunc("/api/v1/coils/", authHandlerFunc(coils))
+	http.HandleFunc("/api/v1/status", authHandlerFunc(status))
+	http.HandleFunc("/api/v1/registers/", authHandlerFunc(registers))
+	http.HandleFunc("/api/v1/temperature/", authHandlerFunc(temperature))
 	html, err := fs.Sub(static, "static/html")
 	if err != nil {
 		log.Fatal(err)
 	}
 	htmlroot := http.FileServer(http.FS(html))
-	http.Handle("/", htmlroot)
-	if *ACCESS_LOG {
-		handler := handlers.LoggingHandler(os.Stdout, http.DefaultServeMux)
-		err = http.ListenAndServe(":8888", handler)
-	} else {
-		err = http.ListenAndServe(":8888", nil)
+	http.HandleFunc("/", authHandler(htmlroot))
+	logdst, err := os.OpenFile(os.DevNull, os.O_WRONLY, os.ModeAppend)
+	if err != nil {
+		log.Fatal(err)
 	}
+	if *ACCESS_LOG {
+		logdst = os.Stdout
+	}
+	handler := handlers.LoggingHandler(logdst, http.DefaultServeMux)
+	err = http.ListenAndServeTLS(":8888", *cert, *key, handler)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func configure() {
+func generateCertificate(certpath, cert, key string) {
+	if _, err := os.Stat(certpath); err != nil {
+		log.Println("Generating configuration directory", certpath)
+		if err := os.MkdirAll(certpath, 0750); err != nil {
+			log.Fatal("Failed to generate configuration directory:", err)
+		}
+	}
+	opts := https.GenerateOptions{Host: "enervent-ctrl.local", RSABits: 4096, ValidFor: 10 * 365 * 24 * time.Hour}
+	log.Println("Generating new self-signed SSL keypair to ", certpath)
+	log.Println("This may take a while...")
+	pub, priv, err := https.GenerateKeys(opts)
+	if err != nil {
+		log.Fatal("Error generating SSL certificate: ", err)
+	}
+	pingvin.Debug.Println("Certificate:\n", string(pub))
+	pingvin.Debug.Println("Key:\n", string(priv))
+	if err := os.WriteFile(key, priv, 0600); err != nil {
+		log.Fatal("Error writing private key ", key, ": ", err)
+	}
+	log.Println("Wrote new SSL private key ", cert)
+	if err := os.WriteFile(cert, pub, 0644); err != nil {
+		log.Fatal("Error writing certificate ", cert, ": ", err)
+	}
+	log.Println("Wrote new SSL public key ", cert)
+}
+
+func configure() (certfile, keyfile *string) {
 	log.Println("Reading configuration")
+	// Get the user home directory path
+	homedir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal("Could not determine user home directory")
+	}
+	certpath := homedir + "/.config/enervent-ctrl/"
 	DEBUG = flag.Bool("debug", false, "Enable debug logging")
 	INTERVAL = flag.Int("interval", 4, "Set the interval of background updates")
 	ACCESS_LOG = flag.Bool("httplog", false, "Enable HTTP access logging")
+	generatecert := flag.Bool("regenerate-certs", false, "Generate a new SSL certificate. A new one is generated on startup as `~/.config/enervent-ctrl/server.crt` if it doesn't exist.")
+	cert := flag.String("cert", certpath+"certificate.pem", "Path to SSL public key to use for HTTPS")
+	key := flag.String("key", certpath+"privatekey.pem", "Path to SSL private key to use for HTTPS")
+	username := flag.String("username", "pingvin", "Username for HTTP Basic Authentication")
+	password := flag.String("password", "enervent", "Password for HTTP Basic Authentication")
+	// TODO: log file flag
 	flag.Parse()
+	usernamehash = sha256.Sum256([]byte(*username))
+	passwordhash = sha256.Sum256([]byte(*password))
+	// Check that certificate file exists
+	if _, err = os.Stat(*cert); err != nil || *generatecert {
+		generateCertificate(certpath, *cert, *key)
+	}
 	if *DEBUG {
 		log.Println("Debug logging enabled")
 	}
 	if *ACCESS_LOG {
 		log.Println("HTTP Access logging enabled")
 	}
+
 	log.Println("Update interval set to", *INTERVAL, "seconds")
+	return cert, key
 }
 
 func main() {
 	log.Println("enervent-ctrl version", version)
-	configure()
+	cert, key := configure()
 	pingvin = pingvinKL.New(*DEBUG)
 	pingvin.Update()
 	go pingvin.Monitor(*INTERVAL)
-	listen()
+	serve(cert, key)
 	pingvin.Quit()
 }
