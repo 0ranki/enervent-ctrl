@@ -1,3 +1,5 @@
+github.com/0ranki/https-go v0.0.0-20230314064508-ba9a558db433 h1:QT2IRJnhIdCSr26LJktnZnBpHdiLfTrUFzLSdP3h9Wo=
+github.com/0ranki/https-go v0.0.0-20230314064508-ba9a558db433/go.mod h1:r4Jb05+PuiVKHDYwSsSBuSz4LpOlC2DgOY4N58+K8Hk=
 github.com/felixge/httpsnoop v1.0.1 h1:lvB5Jl89CsZtGIWuTcDM1E/vkVs49/Ml7JJe07l8SPQ=
 github.com/felixge/httpsnoop v1.0.1/go.mod h1:m8KPJKqk1gH5J9DgRY2ASl2lWCfGKXixSwevea8zH2U=
 github.com/goburrow/modbus v0.1.0 h1:DejRZY73nEM6+bt5JSP6IsFolJ9dVcqxsYbpLbeW/ro=
@@ -6,7 +8,5 @@ github.com/goburrow/serial v0.1.0 h1:v2T1SQa/dlUqQiYIT8+Cu7YolfqAi3K96UmhwYyuSrA
 github.com/goburrow/serial v0.1.0/go.mod h1:sAiqG0nRVswsm1C97xsttiYCzSLBmUZ/VSlVLZJ8haA=
 github.com/gorilla/handlers v1.5.1 h1:9lRY6j8DEeeBT10CvO9hGW0gmky0BprnvDI5vfhUHH4=
 github.com/gorilla/handlers v1.5.1/go.mod h1:t8XrUpc4KVXb7HGyJ4/cEnwQiaxrX/hz1Zv/4g96P1Q=
-github.com/rocketlaunchr/https-go v0.0.0-20200218083740-ba6c48f29f4d h1:bL0c7wxznxDDQ+ebCpGN5T20ATeYDXedomXbQHwFwHA=
-github.com/rocketlaunchr/https-go v0.0.0-20200218083740-ba6c48f29f4d/go.mod h1:kDbnFcjPe/2KqPfycPSq0Ripnddx0DtCC2M1k95myWQ=
 golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 h1:H2TDz8ibqkAF6YGhCdN3jS9O0/s90v0rJh3X/OLHEUk=
 golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2/go.mod h1:K8+ghG5WaK9qNqU5K3HdILfMLy1f3aNYFI/wnl100a8=

@@ -15,8 +15,8 @@ import (
 	"time"
 
 	"github.com/0ranki/enervent-ctrl/enervent-ctrl-go/pingvinKL"
+	"github.com/0ranki/https-go"
 	"github.com/gorilla/handlers"
-	"github.com/rocketlaunchr/https-go"
 )
 
 // Remember to dereference the symbolic links under ./static/html
@@ -26,7 +26,7 @@ import (
 var static embed.FS
 
 var (
-	version      = "0.0.20"
+	version      = "0.0.21"
 	pingvin      pingvinKL.PingvinKL
 	DEBUG        *bool
 	INTERVAL     *int
@@ -50,6 +50,10 @@ func authHandlerFunc(next http.HandlerFunc) http.HandlerFunc {
 				return
 			}
 		}
+		if len(user) == 0 {
+			user = "-"
+		}
+		log.Println("Authentication failed: IP:", r.RemoteAddr, "URI:", r.RequestURI, "username:", user)
 		w.Header().Set("WWW-Authenticate", `Basic realm="restricted", charset="UTF-8"`)
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 	})
@@ -69,6 +73,10 @@ func authHandler(next http.Handler) http.HandlerFunc {
 				return
 			}
 		}
+		if len(user) == 0 {
+			user = "-"
+		}
+		log.Println("Authentication failed: IP:", r.RemoteAddr, "URI:", r.RequestURI, "username:", user)
 		w.Header().Set("WWW-Authenticate", `Basic realm="restricted", charset="UTF-8"`)
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 	})
@@ -201,6 +209,7 @@ func generateCertificate(certpath, cert, key string) {
 	}
 	opts := https.GenerateOptions{Host: "enervent-ctrl.local", RSABits: 4096, ValidFor: 10 * 365 * 24 * time.Hour}
 	log.Println("Generating new self-signed SSL keypair to ", certpath)
+	log.Println("This may take a while...")
 	pub, priv, err := https.GenerateKeys(opts)
 	if err != nil {
 		log.Fatal("Error generating SSL certificate: ", err)
