@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/0ranki/enervent-ctrl/enervent-ctrl-go/pingvinKL"
+	"github.com/0ranki/enervent-ctrl/pingvin"
 	"github.com/0ranki/https-go"
 	"github.com/gorilla/handlers"
 	"github.com/prometheus/client_golang/prometheus"

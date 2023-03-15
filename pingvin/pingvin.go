@@ -1,4 +1,4 @@
-package pingvinKL
+package pingvin
 
 import (
 	"bufio"

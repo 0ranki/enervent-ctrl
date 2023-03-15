@@ -1,4 +1,4 @@
-module github.com/0ranki/enervent-ctrl/enervent-ctrl-go
+module github.com/0ranki/enervent-ctrl
 
 go 1.18
 
