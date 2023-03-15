@@ -31,7 +31,7 @@ var static embed.FS
 
 var (
 	version      = "0.0.23"
-	pingvin      pingvinKL.PingvinKL
+	device       pingvin.PingvinKL
 	config       Conf
 	usernamehash [32]byte
 	passwordhash [32]byte
@@ -102,7 +102,7 @@ func coils(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	pathparams := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/coils/"), "/")
 	if len(pathparams[0]) == 0 {
-		json.NewEncoder(w).Encode(pingvin.Coils)
+		json.NewEncoder(w).Encode(device.Coils)
 	} else if len(pathparams[0]) > 0 && r.Method == "GET" && len(pathparams) < 2 { // && r.Method == "POST"
 		intaddr, err := strconv.Atoi(pathparams[0])
 		if err != nil {
@@ -110,8 +110,8 @@ func coils(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 			return
 		}
-		pingvin.ReadCoil(uint16(intaddr))
-		json.NewEncoder(w).Encode(pingvin.Coils[intaddr])
+		device.ReadCoil(uint16(intaddr))
+		json.NewEncoder(w).Encode(device.Coils[intaddr])
 	} else if len(pathparams[0]) > 0 && r.Method == "POST" && len(pathparams) == 2 {
 		intaddr, err := strconv.Atoi(pathparams[0])
 		if err != nil {
@@ -125,8 +125,8 @@ func coils(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 			return
 		}
-		pingvin.WriteCoil(uint16(intaddr), boolval)
-		json.NewEncoder(w).Encode(pingvin.Coils[intaddr])
+		device.WriteCoil(uint16(intaddr), boolval)
+		json.NewEncoder(w).Encode(device.Coils[intaddr])
 	} else if len(pathparams[0]) > 0 && r.Method == "POST" && len(pathparams) == 1 {
 		intaddr, err := strconv.Atoi(pathparams[0])
 		if err != nil {
@@ -134,8 +134,8 @@ func coils(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 			return
 		}
-		pingvin.WriteCoil(uint16(intaddr), !pingvin.Coils[intaddr].Value)
-		json.NewEncoder(w).Encode(pingvin.Coils[intaddr])
+		device.WriteCoil(uint16(intaddr), !device.Coils[intaddr].Value)
+		json.NewEncoder(w).Encode(device.Coils[intaddr])
 	}
 }
 
@@ -144,7 +144,7 @@ func registers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	pathparams := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/registers/"), "/")
 	if len(pathparams[0]) == 0 {
-		json.NewEncoder(w).Encode(pingvin.Registers)
+		json.NewEncoder(w).Encode(device.Registers)
 	} else if len(pathparams[0]) > 0 && r.Method == "GET" && len(pathparams) < 2 { // && r.Method == "POST"
 		intaddr, err := strconv.Atoi(pathparams[0])
 		if err != nil {
@@ -152,8 +152,8 @@ func registers(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 			return
 		}
-		pingvin.ReadRegister(uint16(intaddr))
-		json.NewEncoder(w).Encode(pingvin.Registers[intaddr])
+		device.ReadRegister(uint16(intaddr))
+		json.NewEncoder(w).Encode(device.Registers[intaddr])
 	} else if len(pathparams[0]) > 0 && r.Method == "POST" && len(pathparams) == 2 {
 		intaddr, err := strconv.Atoi(pathparams[0])
 		if err != nil {
@@ -167,18 +167,18 @@ func registers(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 			return
 		}
-		_, err = pingvin.WriteRegister(uint16(intaddr), uint16(intval))
+		_, err = device.WriteRegister(uint16(intaddr), uint16(intval))
 		if err != nil {
 			log.Println(err)
 		}
-		json.NewEncoder(w).Encode(pingvin.Registers[intaddr])
+		json.NewEncoder(w).Encode(device.Registers[intaddr])
 	}
 }
 
 // \/status endpoint
 func status(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(pingvin.Status)
+	json.NewEncoder(w).Encode(device.Status)
 }
 
 // \/api/v1/temperature endpoint
@@ -186,8 +186,8 @@ func temperature(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	pathparams := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/temperature/"), "/")
 	if len(pathparams[0]) > 0 && r.Method == "POST" && len(pathparams) == 1 {
-		pingvin.Temperature(pathparams[0])
-		json.NewEncoder(w).Encode(pingvin.Registers[135])
+		device.Temperature(pathparams[0])
+		json.NewEncoder(w).Encode(device.Registers[135])
 	} else {
 		return
 	}
@@ -195,7 +195,7 @@ func temperature(w http.ResponseWriter, r *http.Request) {
 
 // Start the HTTP server
 func serve(cert, key *string) {
-	log.Println("Starting pingvinAPI...")
+	log.Println("Starting deviceAPI...")
 	http.HandleFunc("/api/v1/coils/", authHandlerFunc(coils))
 	http.HandleFunc("/api/v1/status", authHandlerFunc(status))
 	http.HandleFunc("/api/v1/registers/", authHandlerFunc(registers))
@@ -232,8 +232,8 @@ func generateCertificate(cert, key string) {
 	if err != nil {
 		log.Fatal("Error generating SSL certificate: ", err)
 	}
-	pingvin.Debug.Println("Certificate:\n", string(pub))
-	pingvin.Debug.Println("Key:\n", string(priv))
+	device.Debug.Println("Certificate:\n", string(pub))
+	device.Debug.Println("Key:\n", string(priv))
 	if err := os.WriteFile(key, priv, 0600); err != nil {
 		log.Fatal("Error writing private key ", key, ": ", err)
 	}
@@ -279,7 +279,7 @@ func initDefaultConfig(confpath string) {
 		8888,
 		confpath + "/certificate.pem",
 		confpath + "/privatekey.pem",
-		"pingvin",
+		"device",
 		"enervent",
 		4,
 		false,
@@ -347,16 +347,16 @@ func configure() {
 	log.Println("Update interval set to", config.Interval, "seconds")
 	if config.EnableMetrics {
 		log.Println("Prometheus exporter enabled (/metrics)")
-		prometheus.MustRegister(&pingvin)
+		prometheus.MustRegister(&device)
 	}
 }
 
 func main() {
 	log.Println("enervent-ctrl version", version)
 	configure()
-	pingvin = pingvinKL.New(config.Debug)
-	pingvin.Update()
-	go pingvin.Monitor(config.Interval)
+	device = pingvin.New(config.Debug)
+	device.Update()
+	go device.Monitor(config.Interval)
 	serve(&config.SslCertificate, &config.SslPrivatekey)
-	pingvin.Quit()
+	device.Quit()
 }
