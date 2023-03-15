@@ -30,7 +30,6 @@ type Pingvin struct {
 	Registers    []pingvinRegister
 	Status       pingvinStatus
 	buslock      *sync.Mutex
-	statuslock   *sync.Mutex
 	handler      *modbus.RTUClientHandler
 	modbusclient modbus.Client
 	Debug        PingvinLogger
