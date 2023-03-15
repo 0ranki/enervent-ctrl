@@ -31,7 +31,7 @@ var static embed.FS
 
 var (
 	version      = "0.0.23"
-	device       pingvin.PingvinKL
+	device       pingvin.Pingvin
 	config       Conf
 	usernamehash [32]byte
 	passwordhash [32]byte

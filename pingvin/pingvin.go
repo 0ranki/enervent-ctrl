@@ -25,7 +25,7 @@ type pingvinCoil struct {
 }
 
 // unit modbus data
-type PingvinKL struct {
+type Pingvin struct {
 	Coils        []pingvinCoil
 	Registers    []pingvinRegister
 	Status       pingvinStatus
@@ -184,7 +184,7 @@ func readCsvLines(file string) [][]string {
 
 // Create modbus.Handler, store it in p.handler,
 // connect the handler and create p.modbusclient (modbus.Client)
-func (p *PingvinKL) createModbusClient() {
+func (p *Pingvin) createModbusClient() {
 	// TODO: read configuration from file, hardcoded for now
 	p.handler = modbus.NewRTUClientHandler("/dev/ttyS0")
 	p.handler.BaudRate = 19200
@@ -201,7 +201,7 @@ func (p *PingvinKL) createModbusClient() {
 	p.modbusclient = modbus.NewClient(p.handler)
 }
 
-func (p *PingvinKL) Quit() {
+func (p *Pingvin) Quit() {
 	err := p.handler.Close()
 	if err != nil {
 		log.Println("ERROR: Quit:", err)
@@ -209,7 +209,7 @@ func (p *PingvinKL) Quit() {
 }
 
 // Update all coil values
-func (p *PingvinKL) updateCoils() {
+func (p *Pingvin) updateCoils() {
 	p.buslock.Lock()
 	results, err := p.modbusclient.ReadCoils(0, uint16(len(p.Coils)))
 	p.buslock.Unlock()
@@ -237,7 +237,7 @@ func (p *PingvinKL) updateCoils() {
 
 // Read a single holding register, stores value in p.Registers
 // Returns integer value of register
-func (p *PingvinKL) ReadRegister(addr uint16) (int, error) {
+func (p *Pingvin) ReadRegister(addr uint16) (int, error) {
 	p.buslock.Lock()
 	results, err := p.modbusclient.ReadHoldingRegisters(addr, 1)
 	p.buslock.Unlock()
@@ -256,7 +256,7 @@ func (p *PingvinKL) ReadRegister(addr uint16) (int, error) {
 }
 
 // Update a single holding register
-func (p *PingvinKL) WriteRegister(addr uint16, value uint16) (uint16, error) {
+func (p *Pingvin) WriteRegister(addr uint16, value uint16) (uint16, error) {
 	p.buslock.Lock()
 	_, err := p.modbusclient.WriteSingleRegister(addr, value)
 	p.buslock.Unlock()
@@ -276,7 +276,7 @@ func (p *PingvinKL) WriteRegister(addr uint16, value uint16) (uint16, error) {
 }
 
 // Update all holding register values
-func (p *PingvinKL) updateRegisters() {
+func (p *Pingvin) updateRegisters() {
 	var err error
 	regs := len(p.Registers)
 	k := 0
@@ -343,14 +343,14 @@ func (p *PingvinKL) updateRegisters() {
 
 // Wrapper function for updating coils, registers and populating
 // p.Status for Home Assistant
-func (p *PingvinKL) Update() {
+func (p *Pingvin) Update() {
 	p.updateCoils()
 	p.updateRegisters()
 	p.populateStatus()
 }
 
 // Read single coil
-func (p PingvinKL) ReadCoil(n uint16) ([]byte, error) {
+func (p *Pingvin) ReadCoil(n uint16) ([]byte, error) {
 	p.buslock.Lock()
 	results, err := p.modbusclient.ReadCoils(n, 1)
 	p.buslock.Unlock()
@@ -363,7 +363,7 @@ func (p PingvinKL) ReadCoil(n uint16) ([]byte, error) {
 }
 
 // Force a single coil
-func (p *PingvinKL) WriteCoil(n uint16, val bool) bool {
+func (p *Pingvin) WriteCoil(n uint16, val bool) bool {
 	if val {
 		p.checkMutexCoils(n, p.handler)
 	}
@@ -389,7 +389,7 @@ func (p *PingvinKL) WriteCoil(n uint16, val bool) bool {
 }
 
 // Force multiple coils
-func (p *PingvinKL) WriteCoils(startaddr uint16, quantity uint16, vals []bool) error {
+func (p *Pingvin) WriteCoils(startaddr uint16, quantity uint16, vals []bool) error {
 	p.updateCoils()
 	coilslice := p.Coils[startaddr:(startaddr + quantity)]
 	if len(coilslice) != len(vals) {
@@ -440,7 +440,7 @@ func (p *PingvinKL) WriteCoils(startaddr uint16, quantity uint16, vals []bool) e
 
 // Some of the coils are mutually exclusive, and can only be 1 one at a time.
 // Check if coil is one of them and force all of them to 0 if so
-func (p *PingvinKL) checkMutexCoils(addr uint16, handler *modbus.RTUClientHandler) error {
+func (p *Pingvin) checkMutexCoils(addr uint16, handler *modbus.RTUClientHandler) error {
 	for _, mutexcoil := range mutexcoils {
 		if mutexcoil == addr {
 			for _, n := range mutexcoils {
@@ -461,7 +461,7 @@ func (p *PingvinKL) checkMutexCoils(addr uint16, handler *modbus.RTUClientHandle
 }
 
 // populate p.Status struct for Home Assistant
-func (p *PingvinKL) populateStatus() {
+func (p *Pingvin) populateStatus() {
 	hpct := p.Registers[49].Value / p.Registers[49].Multiplier
 	if hpct > 100 {
 		p.Status.HeaterPct = hpct - 100
@@ -527,7 +527,7 @@ func parseStatus(value int) string {
 // a decimal degree value (20.0 - 23.0), or full degrees (20-30)
 // Temperature must be between 20 and 30 deg Celsius, otherwise
 // returns an error
-func (p *PingvinKL) Temperature(action string) error {
+func (p *Pingvin) Temperature(action string) error {
 	temperature := 0
 	if action == "up" {
 		temperature = p.Registers[135].Value + 1*p.Registers[135].Multiplier
@@ -565,7 +565,7 @@ func (p *PingvinKL) Temperature(action string) error {
 	return nil
 }
 
-func (p *PingvinKL) Monitor(interval int) {
+func (p *Pingvin) Monitor(interval int) {
 	for {
 		time.Sleep(time.Duration(interval) * time.Second)
 		p.Debug.Println("Updating values")
@@ -574,7 +574,7 @@ func (p *PingvinKL) Monitor(interval int) {
 }
 
 // Implements prometheus.Describe()
-func (p *PingvinKL) Describe(ch chan<- *prometheus.Desc) {
+func (p *Pingvin) Describe(ch chan<- *prometheus.Desc) {
 	for _, hreg := range p.Registers {
 		if !hreg.Reserved {
 			ch <- hreg.PromDesc
@@ -588,7 +588,7 @@ func (p *PingvinKL) Describe(ch chan<- *prometheus.Desc) {
 }
 
 // Implements prometheus.Collect()
-func (p *PingvinKL) Collect(ch chan<- prometheus.Metric) {
+func (p *Pingvin) Collect(ch chan<- prometheus.Metric) {
 	for _, hreg := range p.Registers {
 		if !hreg.Reserved {
 			ch <- prometheus.MustNewConstMetric(
@@ -613,9 +613,9 @@ func (p *PingvinKL) Collect(ch chan<- prometheus.Metric) {
 	}
 }
 
-// create a PingvinKL struct, read coils and registers from CSVs
-func New(debug bool) PingvinKL {
-	pingvin := PingvinKL{}
+// create a Pingvin struct, read coils and registers from CSVs
+func New(debug bool) Pingvin {
+	pingvin := Pingvin{}
 	pingvin.Debug.dbg = debug
 	pingvin.buslock = &sync.Mutex{}
 	pingvin.createModbusClient()
