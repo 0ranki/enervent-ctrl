@@ -614,7 +614,7 @@ func (p *Pingvin) Collect(ch chan<- prometheus.Metric) {
 }
 
 // create a Pingvin struct, read coils and registers from CSVs
-func New(debug bool) Pingvin {
+func New(debug bool) *Pingvin {
 	pingvin := Pingvin{}
 	pingvin.Debug.dbg = debug
 	pingvin.buslock = &sync.Mutex{}
@@ -632,5 +632,5 @@ func New(debug bool) Pingvin {
 			newRegister(registerData[i][0], registerData[i][1], registerData[i][2], registerData[i][3], registerData[i][6]))
 	}
 	log.Println("Parsed", len(pingvin.Registers), "registers")
-	return pingvin
+	return &pingvin
 }
