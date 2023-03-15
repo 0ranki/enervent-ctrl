@@ -30,7 +30,7 @@ import (
 var static embed.FS
 
 var (
-	version      = "0.0.23"
+	version      = "0.0.24"
 	device       pingvin.Pingvin
 	config       Conf
 	usernamehash [32]byte
@@ -195,7 +195,7 @@ func temperature(w http.ResponseWriter, r *http.Request) {
 
 // Start the HTTP server
 func serve(cert, key *string) {
-	log.Println("Starting deviceAPI...")
+	log.Println("Starting service")
 	http.HandleFunc("/api/v1/coils/", authHandlerFunc(coils))
 	http.HandleFunc("/api/v1/status", authHandlerFunc(status))
 	http.HandleFunc("/api/v1/registers/", authHandlerFunc(registers))
@@ -354,7 +354,7 @@ func configure() {
 func main() {
 	log.Println("enervent-ctrl version", version)
 	configure()
-	device = pingvin.New(config.Debug)
+	device = *pingvin.New(config.Debug)
 	device.Update()
 	go device.Monitor(config.Interval)
 	serve(&config.SslCertificate, &config.SslPrivatekey)
