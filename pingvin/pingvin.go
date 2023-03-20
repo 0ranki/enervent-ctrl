@@ -183,7 +183,7 @@ func readCsvLines(file string) [][]string {
 
 // Create modbus.Handler, store it in p.handler,
 // connect the handler and create p.modbusclient (modbus.Client)
-func (p *Pingvin) createModbusClient() {
+func (p *Pingvin) createModbusClient(serial string) {
 	// TODO: read configuration from file, hardcoded for now
 	p.handler = modbus.NewRTUClientHandler("/dev/ttyS0")
 	p.handler.BaudRate = 19200
@@ -613,11 +613,11 @@ func (p *Pingvin) Collect(ch chan<- prometheus.Metric) {
 }
 
 // create a Pingvin struct, read coils and registers from CSVs
-func New(debug bool) *Pingvin {
+func New(serial string, debug bool) *Pingvin {
 	pingvin := Pingvin{}
 	pingvin.Debug.dbg = debug
 	pingvin.buslock = &sync.Mutex{}
-	pingvin.createModbusClient()
+	pingvin.createModbusClient(serial)
 	log.Println("Parsing coil data...")
 	coilData := readCsvLines("coils.csv")
 	for i := 0; i < len(coilData); i++ {

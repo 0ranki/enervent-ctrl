@@ -38,6 +38,7 @@ var (
 )
 
 type Conf struct {
+	SerialAddress  string `yaml:"serial_address"`
 	Port           int    `yaml:"port"`
 	SslCertificate string `yaml:"ssl_certificate"`
 	SslPrivatekey  string `yaml:"ssl_privatekey"`
@@ -276,6 +277,7 @@ func parseConfigFile() {
 // Write the default configuration to $HOME/.config/enervent-ctrl/configuration.yaml
 func initDefaultConfig(confpath string) {
 	config = Conf{
+		"/dev/ttyS0",
 		8888,
 		confpath + "/certificate.pem",
 		confpath + "/privatekey.pem",
@@ -311,6 +313,7 @@ func configure() {
 	passwflag := flag.String("password", config.Password, "Password for HTTP Basic Authentication")
 	promflag := flag.Bool("enable-metrics", config.EnableMetrics, "Enable the built-in Prometheus exporter")
 	logflag := flag.String("logfile", config.LogFile, "Path to log file. Default is empty string, log to stdout")
+	serialflag := flag.String("serial", config.SerialAddress, "Path to serial console for RS-485 connection. Defaults to /dev/ttyS0")
 	// TODO: log file flag
 	flag.Parse()
 	config.Debug = *debugflag
@@ -322,6 +325,7 @@ func configure() {
 	config.Password = *passwflag
 	config.EnableMetrics = *promflag
 	config.LogFile = *logflag
+	config.SerialAddress = *serialflag
 	usernamehash = sha256.Sum256([]byte(config.Username))
 	passwordhash = sha256.Sum256([]byte(config.Password))
 	if len(config.LogFile) != 0 {
@@ -354,7 +358,7 @@ func configure() {
 func main() {
 	log.Println("enervent-ctrl version", version)
 	configure()
-	device = *pingvin.New(config.Debug)
+	device = *pingvin.New(config.SerialAddress, config.Debug)
 	device.Update()
 	go device.Monitor(config.Interval)
 	serve(&config.SslCertificate, &config.SslPrivatekey)
