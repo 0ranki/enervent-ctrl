@@ -184,8 +184,9 @@ func readCsvLines(file string) [][]string {
 // Create modbus.Handler, store it in p.handler,
 // connect the handler and create p.modbusclient (modbus.Client)
 func (p *Pingvin) createModbusClient(serial string) {
-	// TODO: read configuration from file, hardcoded for now
-	p.handler = modbus.NewRTUClientHandler("/dev/ttyS0")
+	// TODO: read configuration from file, mostly hardcoded for now
+	log.Println("Connecting to serial console on", serial)
+	p.handler = modbus.NewRTUClientHandler(serial)
 	p.handler.BaudRate = 19200
 	p.handler.DataBits = 8
 	p.handler.Parity = "N"
