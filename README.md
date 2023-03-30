@@ -11,7 +11,8 @@ Template YAML configurations for Home Assistant are included
 in the `homeassistant` folder, intended to be simple to copy-paste
 into Home Assistant's `configuration.yaml` with minimal necessary
 modifications. These include sensor configurations, helpers and automations for button functions
-and a ready made basic dashboard.
+and a ready made basic dashboard. No custom components are necessary.
+
 ![image](https://user-images.githubusercontent.com/50285623/228834067-503f9820-292c-4614-9316-6cec683e89ef.png)
 
 The daemon is designed to run on a Linux host
