@@ -47,7 +47,7 @@ has been used.
   -interval int
         Set the interval of background updates (default 4)
   -key string
-        Path to SSL private key to use for HTTPS (default "/home/jarno/.config/enervent-ctrl/privatekey.pem")
+        Path to SSL private key to use for HTTPS (default "~/.config/enervent-ctrl/privatekey.pem")
   -logfile string
         Path to log file. Default is empty string, log to stdout
   -password string
