@@ -73,6 +73,32 @@ Configuration options are the same as with CLI flags. CLI flags take precedenenc
 - `log_access:` Enable HTTP Access logging to logfile/STDOUT
 - `debug:` Enable debug logging
 
+### Running
+- Upload the built executable along with `coils.csv` and `registers.csv` to the target host. The files should
+  be placed in the same folder.
+- Run the binary as a regular user. Adding the user to the correct group for serial access may be necessary
+- To run persistently, you can use `screen`, `tmux`, or generate a user systemd service unit file.
+- Example systemd service file (named e.g. enervent-ctrl.service):
+```
+[Unit]
+Description=Enervent-ctrl
+After=network-online.target
+
+[Service]
+Type=simple
+Restart=on-failure
+RestartSec=30
+ExecStart=/path/to/enervent-ctrl-executable
+
+[Install]
+WantedBy=default.target
+```
+- Replace paths in the file and place it under `~/.config/systemd/user`. Create the folder if it doesn't exist.
+- `systemctl --user daemon-reload`
+- `systemctl --user enable --now enervent-ctrl.service`
+- To let user services continue running after logging out:
+  - `sudo loginctl enable-linger $USER`
+
 Readme will be updated in the near future with physical connection instructions.
 
 Work part of my Bachelor's Thesis at Oulu University
