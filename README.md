@@ -36,7 +36,7 @@ has been used.
 - CLI flags:
 ```
   -cert string
-        Path to SSL public key to use for HTTPS (default "/home/jarno/.config/enervent-ctrl/certificate.pem")
+        Path to SSL public key to use for HTTPS (default "~/.config/enervent-ctrl/certificate.pem")
   -debug
         Enable debug logging
   -enable-metrics
