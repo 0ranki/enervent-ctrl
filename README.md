@@ -70,7 +70,7 @@ Configuration options are the same as with CLI flags. CLI flags take precedenenc
 - `log_access:` Enable HTTP Access logging to logfile/STDOUT
 - `debug:` Enable debug logging
 
-Readme will be updated in the near future.
+Readme will be updated in the near future with physical connection instructions.
 
 Work part of my Bachelor's Thesis at Oulu University
 of Applied Sciences.
