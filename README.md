@@ -101,7 +101,7 @@ WantedBy=default.target
 
 Readme will be updated in the near future with physical connection instructions.
 
-Work part of my Bachelor's Thesis at Oulu University
+Work is part of my Bachelor's Thesis at Oulu University
 of Applied Sciences.
 
 Pingvin and Kotilämpö are registered trademarks of Enervent Zehnder Oy.
