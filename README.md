@@ -10,7 +10,9 @@ with measurements and basic control over Pingvin functions.
 Template YAML configurations for Home Assistant are included
 in the `homeassistant` folder, intended to be simple to copy-paste
 into Home Assistant's `configuration.yaml` with minimal necessary
-modifications.
+modifications. These include sensor configurations, helpers and automations for button functions
+and a ready made basic dashboard.
+![image](https://user-images.githubusercontent.com/50285623/228834067-503f9820-292c-4614-9316-6cec683e89ef.png)
 
 The daemon is designed to run on a Linux host
 that has some sort of RS-485 connector attached.
