@@ -102,8 +102,8 @@ WantedBy=default.target
 ### Connecting to the Pingvin unit
 - Connect an RS-485 adapter to the computer you intend to run the daemon on
   - Tested only on a RPi 4B and Zero W 1 with the Zihatec RS-485 HAT
-  - You may need terminating resistors in your adapter, see documentation
-- Ensure the user has read/write privileges to the serial device.
+  - You may need terminating resistors in your adapter, see documentation of your adapter.
+- Ensure the user you intend to run the daemon as has read/write privileges to the serial device.
   - No need to run the daemon as root, and it is not recommended
 
 # Disclaimer:
@@ -117,9 +117,13 @@ WantedBy=default.target
   - A new motherboard seems to cost close to 1000€ + labour
 - Open the cover in which the power switch is attached to. No need to disconnect the switch, there
 should be enough length in the wires to move the lid with the switch connected out of the way
+![IMG_20230114_133625](https://user-images.githubusercontent.com/50285623/229897490-33d917be-9dea-4b74-bfed-c7b25f9f45f6.jpg)
 - Locate the green RS-485 connector on the motherboard, should be on the right edge
   - Schematics available from Enervent at [https://doc.enervent.com/op/op.ViewOnline.php?documentid=940&version=1](https://doc.enervent.com/op/op.ViewOnline.php?documentid=940&version=1), page 38 (finnish)
+![IMG_20230114_133824](https://user-images.githubusercontent.com/50285623/229898136-ce7dc020-6c33-4605-86ff-5285000cbbd2.jpg)
 - The connector has a detachable plug part. Grab the top of the connector with plyers and carefully pull it out. This will make attaching the wire much easier
+- Attach wires by tightening the screws in the connector
+- There should be available holes to pass the wires through on the top of the electronics compartment
 - Connect **A connector to A connector and B to B**. (they are not Tx/Rx like in many other serials)
   - **NOTE:** After reading quite a few forum posts, many RS-485 adapters seem to have printed the A and B the wrong way, I wouldn't be surprised if this was the case with Pingvin too.
 - Plug the plug back to the Pingvin motherboard and close the cover and screws
