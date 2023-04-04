@@ -99,19 +99,23 @@ WantedBy=default.target
 - To let user services continue running after logging out:
   - `sudo loginctl enable-linger $USER`
 
+***
+# Disclaimer:
+
+**I am not responsible of possible damage to your device if you choose to follow these instructions**
+
+**The manufacturer may void your warranty if you choose to follow these instructions**
+***
+
 ### Connecting to the Pingvin unit
+#### RPi/computer running the daemon
 - Connect an RS-485 adapter to the computer you intend to run the daemon on
   - Tested only on a RPi 4B and Zero W 1 with the Zihatec RS-485 HAT
   - You may need terminating resistors in your adapter, see documentation of your adapter.
 - Ensure the user you intend to run the daemon as has read/write privileges to the serial device.
   - No need to run the daemon as root, and it is not recommended
 
-# Disclaimer:
-
-**I am not responsible of possible damage to your device if you choose to follow these instructions**
-
-**The manufacturer may void your warranty if you choose to follow these instructions**
-
+#### Pingvin
 - Shut down the main power of the unit
 - Disconnect the device from mains, discharge any static electricity before proceeding
   - A new motherboard seems to cost close to 1000€ + labour
@@ -121,14 +125,16 @@ should be enough length in the wires to move the lid with the switch connected o
 - Locate the green RS-485 connector on the motherboard, should be on the right edge
   - Schematics available from Enervent at [https://doc.enervent.com/op/op.ViewOnline.php?documentid=940&version=1](https://doc.enervent.com/op/op.ViewOnline.php?documentid=940&version=1), page 38 (finnish)
 ![IMG_20230114_133824](https://user-images.githubusercontent.com/50285623/229898136-ce7dc020-6c33-4605-86ff-5285000cbbd2.jpg)
-- The connector has a detachable plug part. Grab the top of the connector with plyers and carefully pull it out. This will make attaching the wire much easier
+- There should be available outlet holes to pass the wires through on the top of the electronics compartment.
+- The connector has a detachable plug part. Grab the top of the connector (the part with the screws) with plyers and carefully pull it out. This will make attaching the wire much easier
 - Attach wires by tightening the screws in the connector
-- There should be available holes to pass the wires through on the top of the electronics compartment
 - Connect **A connector to A connector and B to B**. (they are not Tx/Rx like in many other serials)
   - **NOTE:** After reading quite a few forum posts, many RS-485 adapters seem to have printed the A and B the wrong way, I wouldn't be surprised if this was the case with Pingvin too.
+![IMG_20230114_133936](https://user-images.githubusercontent.com/50285623/229900176-5bac0027-80c6-4702-ab74-0ff2b9739507.jpg)
 - Plug the plug back to the Pingvin motherboard and close the cover and screws
-- Reconnect mains and switch both devices onhttps://doc.enervent.com/op/op.ViewOnline.php?documentid=940&version=1
-- Mixing A and B should be safe and won't break anything, but the daemon won't work. If that's the case, disconnect powers again and switch the wires on the RPi.
+![IMG_20230114_135258](https://user-images.githubusercontent.com/50285623/229899975-45126a64-7344-4ca0-bfba-c4e524ebe2f8.jpg)
+- Reconnect mains and switch both devices on
+- Mixing A and B should be safe and won't break anything, but the daemon won't work. If that's the case, disconnect power again and switch the wires on the RPi end.
 
 ### Home Assistant
 
