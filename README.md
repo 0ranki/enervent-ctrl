@@ -99,7 +99,24 @@ WantedBy=default.target
 - To let user services continue running after logging out:
   - `sudo loginctl enable-linger $USER`
 
-Readme will be updated in the near future with physical connection instructions.
+### Connecting to the Pingvin unit
+- Connect an RS-485 adapter to the computer you intend to run the daemon on
+  - Tested only on a RPi 4B and Zero W 1 with the Zihatec RS-485 HAT
+  - You may need terminating resistors in your adapter, see documentation
+- Ensure the user has read/write privileges to the serial device.
+  - No need to run the daemon as root, and it is not recommended
+
+# Disclaimer:
+**I am not responsible of possible damage to your device if you choose to follow these instructions**
+**The manufacturer may void your warranty if you choose to follow these instructions**
+- Shut down the main power of the unit
+- Disconnect the device from mains, discharge any static electricity before proceeding
+  - A new motherboard seems to cost close to 1000€ + labour
+- Open the cover in which the power switch is attached to. No need to disconnect the switch, there
+should be enough length in the wires to move the lid with the switch connected out of the way
+- Locate the green RS-485 connector on the motherboard
+  - 
+
 
 Work is part of my Bachelor's Thesis at Oulu University
 of Applied Sciences.
