@@ -107,15 +107,31 @@ WantedBy=default.target
   - No need to run the daemon as root, and it is not recommended
 
 # Disclaimer:
+
 **I am not responsible of possible damage to your device if you choose to follow these instructions**
+
 **The manufacturer may void your warranty if you choose to follow these instructions**
+
 - Shut down the main power of the unit
 - Disconnect the device from mains, discharge any static electricity before proceeding
   - A new motherboard seems to cost close to 1000€ + labour
 - Open the cover in which the power switch is attached to. No need to disconnect the switch, there
 should be enough length in the wires to move the lid with the switch connected out of the way
-- Locate the green RS-485 connector on the motherboard
-  - 
+- Locate the green RS-485 connector on the motherboard, should be on the right edge
+  - Schematics available from Enervent at [https://doc.enervent.com/op/op.ViewOnline.php?documentid=940&version=1](https://doc.enervent.com/op/op.ViewOnline.php?documentid=940&version=1), page 38 (finnish)
+- The connector has a detachable plug part. Grab the top of the connector with plyers and carefully pull it out. This will make attaching the wire much easier
+- Connect **A connector to A connector and B to B**. (they are not Tx/Rx like in many other serials)
+  - **NOTE:** After reading quite a few forum posts, many RS-485 adapters seem to have printed the A and B the wrong way, I wouldn't be surprised if this was the case with Pingvin too.
+- Plug the plug back to the Pingvin motherboard and close the cover and screws
+- Reconnect mains and switch both devices onhttps://doc.enervent.com/op/op.ViewOnline.php?documentid=940&version=1
+- Mixing A and B should be safe and won't break anything, but the daemon won't work. If that's the case, disconnect powers again and switch the wires on the RPi.
+
+### Home Assistant
+
+- There are so many variations for HASS configs, that definite instructions are hard to do.
+- All the YAMLs are intended to be copy-pasted to `configuration.yaml` (or files included to configuration.yaml)
+- Change the IP address, port, username and password according to your configuration
+- Restart Home Assistant (A full reload doesn't seem to be enough for all REST integration features to update)
 
 
 Work is part of my Bachelor's Thesis at Oulu University
