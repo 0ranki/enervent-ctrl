@@ -14,6 +14,9 @@ input_boolean:
   penguin_max_cooling:
     name: Penguin Max Cooling
     icon: mdi:snowflake
+  penguin_after_heater:
+    name: Penguin After Heater
+    icon: mdi:heating-coil
 input_button:
   penguin_temperature_up:
     name: Penguin temperature up

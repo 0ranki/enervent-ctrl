@@ -19,6 +19,12 @@ views:
                   green: 0
                   yellow: 0
                   red: 100
+          - type: entities
+            entities:
+              - entity: input_boolean.penguin_after_heater
+                name: Lämmitys sallittu
+                secondary_info: last-changed
+            state_color: true
           - square: false
             columns: 4
             type: grid
@@ -99,12 +105,14 @@ views:
             entities:
               - entity: sensor.penguin_operating_mode
                 name: Tila
+                secondary_info: last-changed
               - entity: sensor.penguin_room_temperature_1
                 name: Huonelämpötila
               - entity: sensor.penguin_temperature_setting
                 name: Asetettu lämpötila
               - entity: sensor.penguin_circulation_fan_pct
                 name: Kiertoilma
+                secondary_info: last-changed
             state_color: false
       - type: entities
         entities:
@@ -134,3 +142,4 @@ views:
           - entity: sensor.penguin_hrc_efficiency_extract
             name: LTO hyötysuhde poistoilma
         title: Mittaukset
+title: Lämmitys & IV

@@ -96,8 +96,15 @@ rest:
       - name: "Penguin overpressure"
         value_template: "{{ value_json['coils'][3]['value'] }}"
         icon: mdi:fireplace
+      - name: "Penguin after heater enabled"
+        value_template: "{{ value_json['coils'][54]['value'] }}"
+        icon: mdi:heating-coil
 
 template:
+  - sensor:
+    - name: "Penguin temperature delta"
+      state: "{{ (states('sensor.penguin_room_temperature_1')|float(default=0) - states('sensor.penguin_temperature_setting')|float(default=0)) | round(1, default=0) }}"
+      unit_of_measurement: "°C"
   - binary_sensor:
     - name: "Penguin max heating enabled"
       state: "{{ states('input_number.penguin_temperature_setting_helper') > states('sensor.penguin_room_temperature_1') }}"
@@ -170,6 +177,18 @@ rest_command:
     password: enervent
   penguin_temperature_down:
     url: https://192.168.0.210:8888/api/v1/temperature/down
+    method: POST
+    verify_ssl: false
+    username: pingvin
+    password: enervent
+  penguin_heater_enabled:
+    url: https://192.168.0.210:8888/api/v1/coils/54/1
+    method: POST
+    verify_ssl: false
+    username: pingvin
+    password: enervent
+  penguin_heater_disabled:
+    url: https://192.168.0.210:8888/api/v1/coils/54/0
     method: POST
     verify_ssl: false
     username: pingvin

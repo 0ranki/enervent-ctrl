@@ -19,11 +19,17 @@ views:
                   green: 0
                   yellow: 0
                   red: 100
+          - type: entities
+            entities:
+              - entity: input_boolean.penguin_after_heater
+                name: Heating allowed
+                secondary_info: last-changed
+            state_color: true
           - square: false
-            columns: 3
+            columns: 4
             type: grid
             cards:
-              - show_name: true
+              - show_name: false
                 show_icon: true
                 type: button
                 tap_action:
@@ -31,49 +37,109 @@ views:
                 entity: input_boolean.penguin_circulation_fan_adaptive
                 name: Adaptive circulation
                 show_state: false
-              - show_name: true
+              - type: conditional
+                conditions:
+                  - entity: binary_sensor.penguin_max_heating_enabled
+                    state: 'on'
+                card:
+                  show_name: false
+                  show_icon: true
+                  type: button
+                  tap_action:
+                    action: toggle
+                  entity: input_boolean.penguin_max_heating
+                  name: Max heating
+                  show_state: false
+              - type: conditional
+                conditions:
+                  - entity: binary_sensor.penguin_max_heating_enabled
+                    state: 'off'
+                card:
+                  show_name: false
+                  show_icon: true
+                  type: button
+                  tap_action:
+                    action: toggle
+                  entity: input_boolean.penguin_max_cooling
+                  name: Max cooling
+                  show_state: false
+              - show_name: false
                 show_icon: true
                 type: button
                 tap_action:
                   action: toggle
-                entity: input_boolean.penguin_max_heating
-                name: Max heating
-                show_state: false
+                icon: mdi:fireplace
+                entity: input_boolean.penguin_overpressure
+              - show_name: false
+                show_icon: true
+                type: button
+                tap_action:
+                  action: toggle
+                icon: mdi:fan-plus
+                entity: input_boolean.penguin_boost
+          - square: false
+            columns: 3
+            type: grid
+            cards:
+              - show_name: false
+                show_icon: true
+                type: button
+                tap_action:
+                  action: toggle
+                entity: input_button.penguin_temperature_down
+                icon: mdi:minus
+              - type: gauge
+                entity: input_number.penguin_temperature_setting_helper
+                name: ' '
+                needle: true
+                min: 16
+                max: 30
+              - show_name: false
+                show_icon: true
+                type: button
+                tap_action:
+                  action: toggle
+                entity: input_button.penguin_temperature_up
+                icon: mdi:plus
           - type: entities
             entities:
               - entity: sensor.penguin_operating_mode
-                name: Mode
+                name: Tila
+                secondary_info: last-changed
               - entity: sensor.penguin_room_temperature_1
                 name: Room temperature
               - entity: sensor.penguin_temperature_setting
                 name: Temperature setpoint
               - entity: sensor.penguin_circulation_fan_pct
-                name: Criculation fan
+                name: Circulation fan pct
+                secondary_info: last-changed
             state_color: false
       - type: entities
         entities:
           - entity: sensor.penguin_intake_air
-            name: Outside air at machine
+            name: Outside air at unit
           - entity: sensor.penguin_intake_air_24h
             name: Outside air 24h avg
           - entity: sensor.penguin_supply_air_hrc
-            name: Supply air after HRC
+            name: Intake after HRC
           - entity: sensor.penguin_supply_air_humidity
-            name: Supply air humidity
+            name: Intake humidity
           - entity: sensor.penguin_supply_air
             name: Supply air
           - entity: sensor.penguin_return_water
-            name: Return water
+            name: Return water temperature
           - entity: sensor.penguin_extract_air
-            name: Extract air before HRC
+            name: Extract before HRC
           - entity: sensor.penguin_waste_air
             name: Waste air
           - entity: sensor.penguin_extract_air_humidity
             name: Extract air humidity
           - entity: sensor.penguin_extract_air_humidity_48h
-            name: Extract air humidity 48h avg
+            name: Extract air humidity 48h
           - entity: sensor.penguin_hrc_efficiency_intake
-            name: HRC efficiency intake
+            icon: ''
+            name: HRC Efficiency intake
           - entity: sensor.penguin_hrc_efficiency_extract
-            name: HRC efficiency extract
+            name: HRC Efficiency extract
         title: Measurements
+title: Heating & Ventilation
