@@ -30,7 +30,7 @@ import (
 var static embed.FS
 
 var (
-	version      = "0.0.27"
+	version      = "0.0.28"
 	device       pingvin.Pingvin
 	config       Conf
 	usernamehash [32]byte
@@ -50,6 +50,7 @@ type Conf struct {
 	LogFile        string `yaml:"log_file"`
 	LogAccess      bool   `yaml:"log_access"`
 	Debug          bool   `yaml:"debug"`
+	ReadOnly       bool   `yaml:"read_only"`
 }
 
 // HTTP Basic Authentication middleware for http.HandlerFunc
@@ -137,7 +138,11 @@ func coils(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 			return
 		}
-		device.WriteCoil(uint16(intaddr), boolval)
+		if config.ReadOnly {
+			log.Println("WARNING: Read only mode, refusing to write to device")
+		} else {
+			device.WriteCoil(uint16(intaddr), boolval)
+		}
 		json.NewEncoder(w).Encode(device.Coils[intaddr])
 	} else if len(pathparams[0]) > 0 && r.Method == "POST" && len(pathparams) == 1 {
 		intaddr, err := strconv.Atoi(pathparams[0])
@@ -146,7 +151,11 @@ func coils(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 			return
 		}
-		device.WriteCoil(uint16(intaddr), !device.Coils[intaddr].Value)
+		if config.ReadOnly {
+			log.Println("WARNING: Read only mode, refusing to write to device")
+		} else {
+			device.WriteCoil(uint16(intaddr), !device.Coils[intaddr].Value)
+		}
 		json.NewEncoder(w).Encode(device.Coils[intaddr])
 	}
 }
@@ -179,9 +188,13 @@ func registers(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 			return
 		}
-		_, err = device.WriteRegister(uint16(intaddr), uint16(intval))
-		if err != nil {
-			log.Println(err)
+		if config.ReadOnly {
+			log.Println("WARNING: Read only mode, refusing to write to device")
+		} else {
+			_, err = device.WriteRegister(uint16(intaddr), uint16(intval))
+			if err != nil {
+				log.Println(err)
+			}
 		}
 		json.NewEncoder(w).Encode(device.Registers[intaddr])
 	}
@@ -300,6 +313,7 @@ func initDefaultConfig(confpath string) {
 		LogAccess:      false,
 		LogFile:        "",
 		Debug:          false,
+		ReadOnly:       false,
 	}
 	conffile := confpath + "/configuration.yaml"
 	confbytes, err := yaml.Marshal(&config)
@@ -327,6 +341,7 @@ func configure() {
 	promflag := flag.Bool("enable-metrics", config.EnableMetrics, "Enable the built-in Prometheus exporter")
 	logflag := flag.String("logfile", config.LogFile, "Path to log file. Default is empty string, log to stdout")
 	serialflag := flag.String("serial", config.SerialAddress, "Path to serial console for RS-485 connection. Defaults to /dev/ttyS0")
+	readOnly := flag.Bool("read-only", config.ReadOnly, "Read only mode, no writes to device are allowed")
 	// TODO: log file flag
 	flag.Parse()
 	config.Debug = *debugflag
@@ -340,6 +355,7 @@ func configure() {
 	config.EnableMetrics = *promflag
 	config.LogFile = *logflag
 	config.SerialAddress = *serialflag
+	config.ReadOnly = *readOnly
 	usernamehash = sha256.Sum256([]byte(config.Username))
 	passwordhash = sha256.Sum256([]byte(config.Password))
 	if len(config.LogFile) != 0 {
