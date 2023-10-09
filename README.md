@@ -37,27 +37,31 @@ has been used.
 - CLI flags:
 ```
   -cert string
-        Path to SSL public key to use for HTTPS (default "~/.config/enervent-ctrl/certificate.pem")
+    	Path to SSL public key to use for HTTPS (default "~/.config/enervent-ctrl/certificate.pem")
   -debug
-        Enable debug logging
+    	Enable debug logging
+  -disable-auth
+    	Disable HTTP basic authentication (default true)
   -enable-metrics
-        Enable the built-in Prometheus exporter (default true)
+    	Enable the built-in Prometheus exporter (default true)
   -httplog
-        Enable HTTP access logging
+    	Enable HTTP access logging
   -interval int
-        Set the interval of background updates (default 4)
+    	Set the interval of background updates (default 4)
   -key string
-        Path to SSL private key to use for HTTPS (default "~/.config/enervent-ctrl/privatekey.pem")
+    	Path to SSL private key to use for HTTPS (default "~/.config/enervent-ctrl/privatekey.pem")
   -logfile string
-        Path to log file. Default is empty string, log to stdout
+    	Path to log file. Default is empty string, log to stdout
   -password string
-        Password for HTTP Basic Authentication (default "enervent")
+    	Password for HTTP Basic Authentication (default "enervent")
+  -read-only
+    	Read only mode, no writes to device are allowed
   -regenerate-certs ~/.config/enervent-ctrl/server.crt
-        Generate a new SSL certificate. A new one is generated on startup as ~/.config/enervent-ctrl/server.crt if it doesn't exist.
+    	Generate a new SSL certificate. A new one is generated on startup as ~/.config/enervent-ctrl/server.crt if it doesn't exist.
   -serial string
-        Path to serial console for RS-485 connection. Defaults to /dev/ttyS0 (default "/dev/ttyS0")
+    	Path to serial console for RS-485 connection. Defaults to /dev/ttyS0 (default "/dev/ttyS0")
   -username string
-        Username for HTTP Basic Authentication (default "pingvin")
+    	Username for HTTP Basic Authentication (default "pingvin")
 ```
 On first run, the daemon generates `~/.config/enervent-ctrl/configuration.yaml` with default values.
 Configuration options are the same as with CLI flags. CLI flags take precedenence over the config file.
