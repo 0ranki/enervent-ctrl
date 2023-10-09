@@ -30,7 +30,7 @@ import (
 var static embed.FS
 
 var (
-	version      = "0.0.26"
+	version      = "0.0.27"
 	device       pingvin.Pingvin
 	config       Conf
 	usernamehash [32]byte
@@ -42,6 +42,7 @@ type Conf struct {
 	Port           int    `yaml:"port"`
 	SslCertificate string `yaml:"ssl_certificate"`
 	SslPrivatekey  string `yaml:"ssl_privatekey"`
+	DisableAuth    bool   `yaml:"disable_auth"`
 	Username       string `yaml:"username"`
 	Password       string `yaml:"password"`
 	Interval       int    `yaml:"interval"`
@@ -52,9 +53,14 @@ type Conf struct {
 }
 
 // HTTP Basic Authentication middleware for http.HandlerFunc
+// This is used for the API
 func authHandlerFunc(next http.HandlerFunc) http.HandlerFunc {
 	// Based on https://www.alexedwards.net/blog/basic-authentication-in-go
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if config.DisableAuth {
+			next.ServeHTTP(w, r)
+			return
+		}
 		user, pass, ok := r.BasicAuth()
 		if ok {
 			userHash := sha256.Sum256([]byte(user))
@@ -76,8 +82,13 @@ func authHandlerFunc(next http.HandlerFunc) http.HandlerFunc {
 }
 
 // HTTP Basic Authentication middleware for http.Handler
+// Used for the HTML monitor views
 func authHandler(next http.Handler) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if config.DisableAuth {
+			next.ServeHTTP(w, r)
+			return
+		}
 		user, pass, ok := r.BasicAuth()
 		if ok {
 			userHash := sha256.Sum256([]byte(user))
@@ -277,17 +288,18 @@ func parseConfigFile() {
 // Write the default configuration to $HOME/.config/enervent-ctrl/configuration.yaml
 func initDefaultConfig(confpath string) {
 	config = Conf{
-		"/dev/ttyS0",
-		8888,
-		confpath + "/certificate.pem",
-		confpath + "/privatekey.pem",
-		"device",
-		"enervent",
-		4,
-		false,
-		"",
-		false,
-		false,
+		SerialAddress:  "/dev/ttyS0",
+		Port:           8888,
+		SslCertificate: confpath + "/certificate.pem",
+		SslPrivatekey:  confpath + "/privatekey.pem",
+		DisableAuth:    false,
+		Username:       "pingvin",
+		Password:       "enervent",
+		Interval:       4,
+		EnableMetrics:  false,
+		LogAccess:      false,
+		LogFile:        "",
+		Debug:          false,
 	}
 	conffile := confpath + "/configuration.yaml"
 	confbytes, err := yaml.Marshal(&config)
@@ -309,6 +321,7 @@ func configure() {
 	generatecert := flag.Bool("regenerate-certs", false, "Generate a new SSL certificate. A new one is generated on startup as `~/.config/enervent-ctrl/server.crt` if it doesn't exist.")
 	certflag := flag.String("cert", config.SslCertificate, "Path to SSL public key to use for HTTPS")
 	keyflag := flag.String("key", config.SslPrivatekey, "Path to SSL private key to use for HTTPS")
+	noauthflag := flag.Bool("disable-auth", config.DisableAuth, "Disable HTTP basic authentication")
 	usernflag := flag.String("username", config.Username, "Username for HTTP Basic Authentication")
 	passwflag := flag.String("password", config.Password, "Password for HTTP Basic Authentication")
 	promflag := flag.Bool("enable-metrics", config.EnableMetrics, "Enable the built-in Prometheus exporter")
@@ -321,6 +334,7 @@ func configure() {
 	config.LogAccess = *logaccflag
 	config.SslCertificate = *certflag
 	config.SslPrivatekey = *keyflag
+	config.DisableAuth = *noauthflag
 	config.Username = *usernflag
 	config.Password = *passwflag
 	config.EnableMetrics = *promflag
