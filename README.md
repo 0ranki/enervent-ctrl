@@ -1,7 +1,6 @@
 # Enervent-control
 
-### Upstream URL:
-https://git.oranki.net/jarno/enervent-ctrl
+### Upstream URL: [https://git.oranki.net/jarno/enervent-ctrl](https://git.oranki.net/jarno/enervent-ctrl)
 
 External control of an Enervent Pingvin
 Kotilämpö residential heating/ventilation
