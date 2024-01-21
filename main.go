@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"flag"
 	"io/fs"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -30,7 +29,7 @@ import (
 var static embed.FS
 
 var (
-	version      = "0.0.28"
+	version      = "0.1.0"
 	device       pingvin.Pingvin
 	config       Conf
 	usernamehash [32]byte
@@ -115,7 +114,7 @@ func coils(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	pathparams := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/coils/"), "/")
 	if len(pathparams[0]) == 0 {
-		json.NewEncoder(w).Encode(device.Coils)
+		_ = json.NewEncoder(w).Encode(device.Coils)
 	} else if len(pathparams[0]) > 0 && r.Method == "GET" && len(pathparams) < 2 { // && r.Method == "POST"
 		intaddr, err := strconv.Atoi(pathparams[0])
 		if err != nil {
@@ -123,8 +122,11 @@ func coils(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 			return
 		}
-		device.ReadCoil(uint16(intaddr))
-		json.NewEncoder(w).Encode(device.Coils[intaddr])
+		err = device.ReadCoil(uint16(intaddr))
+		if err != nil {
+			log.Println("ERROR ReadCoil: client.ReadCoils: ", err)
+		}
+		_ = json.NewEncoder(w).Encode(device.Coils[intaddr])
 	} else if len(pathparams[0]) > 0 && r.Method == "POST" && len(pathparams) == 2 {
 		intaddr, err := strconv.Atoi(pathparams[0])
 		if err != nil {
@@ -143,7 +145,7 @@ func coils(w http.ResponseWriter, r *http.Request) {
 		} else {
 			device.WriteCoil(uint16(intaddr), boolval)
 		}
-		json.NewEncoder(w).Encode(device.Coils[intaddr])
+		_ = json.NewEncoder(w).Encode(device.Coils[intaddr])
 	} else if len(pathparams[0]) > 0 && r.Method == "POST" && len(pathparams) == 1 {
 		intaddr, err := strconv.Atoi(pathparams[0])
 		if err != nil {
@@ -156,7 +158,7 @@ func coils(w http.ResponseWriter, r *http.Request) {
 		} else {
 			device.WriteCoil(uint16(intaddr), !device.Coils[intaddr].Value)
 		}
-		json.NewEncoder(w).Encode(device.Coils[intaddr])
+		_ = json.NewEncoder(w).Encode(device.Coils[intaddr])
 	}
 }
 
@@ -165,7 +167,7 @@ func registers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	pathparams := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/registers/"), "/")
 	if len(pathparams[0]) == 0 {
-		json.NewEncoder(w).Encode(device.Registers)
+		_ = json.NewEncoder(w).Encode(device.Registers)
 	} else if len(pathparams[0]) > 0 && r.Method == "GET" && len(pathparams) < 2 { // && r.Method == "POST"
 		intaddr, err := strconv.Atoi(pathparams[0])
 		if err != nil {
@@ -173,8 +175,11 @@ func registers(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 			return
 		}
-		device.ReadRegister(uint16(intaddr))
-		json.NewEncoder(w).Encode(device.Registers[intaddr])
+		_, err = device.ReadRegister(uint16(intaddr))
+		if err != nil {
+			log.Println("ERROR: ReadRegister:", err)
+		}
+		_ = json.NewEncoder(w).Encode(device.Registers[intaddr])
 	} else if len(pathparams[0]) > 0 && r.Method == "POST" && len(pathparams) == 2 {
 		intaddr, err := strconv.Atoi(pathparams[0])
 		if err != nil {
@@ -196,14 +201,14 @@ func registers(w http.ResponseWriter, r *http.Request) {
 				log.Println(err)
 			}
 		}
-		json.NewEncoder(w).Encode(device.Registers[intaddr])
+		_ = json.NewEncoder(w).Encode(device.Registers[intaddr])
 	}
 }
 
 // \/status endpoint
 func status(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(device.Status)
+	_ = json.NewEncoder(w).Encode(device.Status)
 }
 
 // \/api/v1/temperature endpoint
@@ -211,8 +216,11 @@ func temperature(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	pathparams := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/temperature/"), "/")
 	if len(pathparams[0]) > 0 && r.Method == "POST" && len(pathparams) == 1 {
-		device.Temperature(pathparams[0])
-		json.NewEncoder(w).Encode(device.Registers[135])
+		err := device.Temperature(pathparams[0])
+		if err != nil {
+			log.Println("ERROR: ", err)
+		}
+		_ = json.NewEncoder(w).Encode(device.Registers[135])
 	} else {
 		return
 	}
@@ -283,12 +291,12 @@ func parseConfigFile() {
 		}
 	}
 	conffile := confpath + "/configuration.yaml"
-	yamldata, err := ioutil.ReadFile(conffile)
+	yamldata, err := os.ReadFile(conffile)
 	if err != nil {
 		log.Println("Configuration file", conffile, "not found")
 		log.Println("Generating", conffile, "with default values")
 		initDefaultConfig(confpath)
-		if yamldata, err = ioutil.ReadFile(conffile); err != nil {
+		if yamldata, err = os.ReadFile(conffile); err != nil {
 			log.Fatal("Error parsing configuration:", err)
 		}
 	}

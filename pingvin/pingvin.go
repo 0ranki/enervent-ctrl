@@ -26,9 +26,9 @@ type pingvinCoil struct {
 
 // unit modbus data
 type Pingvin struct {
-	Coils        []pingvinCoil
-	Registers    []pingvinRegister
-	Status       pingvinStatus
+	Coils        []*pingvinCoil
+	Registers    []*pingvinRegister
+	Status       *pingvinStatus
 	buslock      *sync.Mutex
 	handler      *modbus.RTUClientHandler
 	modbusclient modbus.Client
@@ -73,7 +73,7 @@ type pingvinStatus struct {
 	OpMode       string              `json:"op_mode"`           // Current operating mode, text representation
 	Uptime       string              `json:"uptime"`            // Unit uptime
 	SystemTime   string              `json:"system_time"`       // Time and date in unit
-	Coils        []pingvinCoil       `json:"coils"`
+	Coils        []*pingvinCoil      `json:"coils"`
 }
 
 type PingvinLogger struct {
@@ -101,7 +101,7 @@ func (logger *PingvinLogger) Println(msg ...any) {
 	}
 }
 
-func newCoil(address string, symbol string, description string) pingvinCoil {
+func newCoil(address string, symbol string, description string) *pingvinCoil {
 	addr, err := strconv.Atoi(address)
 	if err != nil {
 		log.Fatal("newCoil: Atoi: ", err)
@@ -111,7 +111,7 @@ func newCoil(address string, symbol string, description string) pingvinCoil {
 		promdesc := strings.ToLower(symbol)
 		zpadaddr := fmt.Sprintf("%02d", addr)
 		promdesc = strings.Replace(promdesc, "_", "_"+zpadaddr+"_", 1)
-		return pingvinCoil{addr, symbol, false, description, reserved,
+		return &pingvinCoil{addr, symbol, false, description, reserved,
 			prometheus.NewDesc(
 				prometheus.BuildFQName("", "pingvin", promdesc),
 				description,
@@ -120,10 +120,10 @@ func newCoil(address string, symbol string, description string) pingvinCoil {
 			),
 		}
 	}
-	return pingvinCoil{addr, symbol, false, description, reserved, nil}
+	return &pingvinCoil{addr, symbol, false, description, reserved, nil}
 }
 
-func newRegister(address, symbol, typ, multiplier, description string) pingvinRegister {
+func newRegister(address, symbol, typ, multiplier, description string) *pingvinRegister {
 	addr, err := strconv.Atoi(address)
 	if err != nil {
 		log.Fatal("newRegister: Atoi(address): ", err)
@@ -141,7 +141,7 @@ func newRegister(address, symbol, typ, multiplier, description string) pingvinRe
 		promdesc := strings.ToLower(symbol)
 		zpadaddr := fmt.Sprintf("%03d", addr)
 		promdesc = strings.Replace(promdesc, "_", "_"+zpadaddr+"_", 1)
-		return pingvinRegister{
+		return &pingvinRegister{
 			addr,
 			symbol,
 			0,
@@ -158,7 +158,7 @@ func newRegister(address, symbol, typ, multiplier, description string) pingvinRe
 			),
 		}
 	}
-	return pingvinRegister{addr, symbol, 0, "0000000000000000", typ, description, reserved, multipl, nil}
+	return &pingvinRegister{addr, symbol, 0, "0000000000000000", typ, description, reserved, multipl, nil}
 }
 
 // read a CSV file containing data for coils or registers
@@ -210,11 +210,23 @@ func (p *Pingvin) Quit() {
 
 // Update all coil values
 func (p *Pingvin) updateCoils() {
-	p.buslock.Lock()
-	results, err := p.modbusclient.ReadCoils(0, uint16(len(p.Coils)))
-	p.buslock.Unlock()
-	if err != nil {
-		log.Fatal("updateCoils: client.ReadCoils: ", err)
+	var results []byte
+	var err error
+	for retries := 1; retries <= 5; retries++ {
+		p.Debug.Println("Reading coils, attempt", retries)
+		p.buslock.Lock()
+		results, err = p.modbusclient.ReadCoils(0, uint16(len(p.Coils)))
+		p.buslock.Unlock()
+		if len(results) > 0 {
+			break
+		} else if retries == 4 {
+			log.Println("ERROR: updateCoils: client.Readcoils: ", err)
+			return
+		}
+		if err != nil {
+			log.Printf("WARNING updateCoils: client.ReadCoils attempt %d: %s\n", retries, err)
+		}
+		time.Sleep(100 * time.Millisecond)
 	}
 	// modbus.ReadCoils returns a byte array, with the first byte's bits representing coil values 0-7,
 	// second byte coils 8-15 etc.
@@ -242,8 +254,8 @@ func (p *Pingvin) ReadRegister(addr uint16) (int, error) {
 	results, err := p.modbusclient.ReadHoldingRegisters(addr, 1)
 	p.buslock.Unlock()
 	if err != nil {
-		log.Println("ERROR: ReadRegister:", err)
-		return 0, err
+		//log.Println("ERROR: ReadRegister:", err)
+		return p.Registers[addr].Value, err
 	}
 	if p.Registers[addr].Type == "uint16" {
 		p.Registers[addr].Value = int(uint16(results[0]) << 8)
@@ -270,6 +282,7 @@ func (p *Pingvin) WriteRegister(addr uint16, value uint16) (uint16, error) {
 		return 0, err
 	}
 	if val == int(value) {
+		log.Printf("Wrote register %d to value %d (%s: %s)", addr, p.Registers[addr].Value, p.Registers[addr].Symbol, p.Registers[addr].Description)
 		return value, nil
 	}
 	return 0, fmt.Errorf("Failed to write register")
@@ -288,8 +301,8 @@ func (p *Pingvin) updateRegisters() {
 		if regs-k < 125 {
 			r = regs - k
 		}
-		results := []byte{}
-		for retries := 0; retries < 5; retries++ {
+		var results []byte
+		for retries := 1; retries <= 5; retries++ {
 			p.Debug.Println("Reading registers, attempt", retries, "k:", k)
 			p.buslock.Lock()
 			results, err = p.modbusclient.ReadHoldingRegisters(uint16(k), uint16(r))
@@ -299,8 +312,9 @@ func (p *Pingvin) updateRegisters() {
 			} else if retries == 4 {
 				log.Fatal("updateRegisters: client.ReadHoldingRegisters: ", err)
 			} else if err != nil {
-				log.Println("WARNING: updateRegisters: client.ReadHoldingRegisters: ", err)
+				log.Printf("WARNING: updateRegisters: client.ReadHoldingRegisters attempt %d: %s", retries, err)
 			}
+			time.Sleep(100 * time.Millisecond)
 		}
 		// The values represent 16 bit integers, but modbus works with bytes
 		// Each even byte of the returned []byte is the 8 MSBs of a new 16-bit
@@ -350,22 +364,30 @@ func (p *Pingvin) Update() {
 }
 
 // Read single coil
-func (p *Pingvin) ReadCoil(n uint16) ([]byte, error) {
-	p.buslock.Lock()
-	results, err := p.modbusclient.ReadCoils(n, 1)
-	p.buslock.Unlock()
-	if err != nil {
-		log.Fatal("ReadCoil: client.ReadCoils: ", err)
-		return nil, err
+func (p *Pingvin) ReadCoil(n uint16) (err error) {
+	var results []byte
+	for retries := 1; retries <= 5; retries++ {
+		p.buslock.Lock()
+		results, err = p.modbusclient.ReadCoils(n, 1)
+		p.buslock.Unlock()
+		if len(results) > 0 && err == nil {
+			break
+		} else if retries == 4 {
+			//log.Println("ERROR ReadCoil: client.ReadCoils: ", err)
+			return
+		} else if err != nil {
+			log.Printf("WARNING: ReadCoil: client.ReadCoils attempt %d: %s", retries, err)
+		}
+		time.Sleep(100 * time.Millisecond)
 	}
 	p.Coils[n].Value = results[0] == 1
-	return results, nil
+	return
 }
 
 // Force a single coil
 func (p *Pingvin) WriteCoil(n uint16, val bool) bool {
 	if val {
-		p.checkMutexCoils(n, p.handler)
+		_ = p.checkMutexCoils(n) //, p.handler)
 	}
 	var value uint16 = 0
 	if val {
@@ -377,14 +399,15 @@ func (p *Pingvin) WriteCoil(n uint16, val bool) bool {
 	if err != nil {
 		log.Println("ERROR: WriteCoil: ", err)
 	}
-	if (val && results[0] == 255) || (!val && results[0] == 0) {
-		log.Println("WriteCoil: wrote coil", n, "to value", val)
-	} else {
+	if (val && results[0] != 255) && (!val && results[0] != 0) {
 		log.Println("ERROR: WriteCoil: failed to write coil")
 		return false
-
 	}
-	p.ReadCoil(n)
+	err = p.ReadCoil(n)
+	if err != nil {
+		log.Printf("ERROR WriteCoil: p.ReadCoil: %s", err)
+	}
+	log.Printf("Wrote coil %d to value %v (%s: %s)", n, p.Coils[n].Value, p.Coils[n].Symbol, p.Coils[n].Description)
 	return true
 }
 
@@ -440,7 +463,7 @@ func (p *Pingvin) WriteCoils(startaddr uint16, quantity uint16, vals []bool) err
 
 // Some of the coils are mutually exclusive, and can only be 1 one at a time.
 // Check if coil is one of them and force all of them to 0 if so
-func (p *Pingvin) checkMutexCoils(addr uint16, handler *modbus.RTUClientHandler) error {
+func (p *Pingvin) checkMutexCoils(addr uint16) error { //, handler *modbus.RTUClientHandler) error {
 	for _, mutexcoil := range mutexcoils {
 		if mutexcoil == addr {
 			for _, n := range mutexcoils {
@@ -462,6 +485,7 @@ func (p *Pingvin) checkMutexCoils(addr uint16, handler *modbus.RTUClientHandler)
 
 // populate p.Status struct for Home Assistant
 func (p *Pingvin) populateStatus() {
+	p.Status = &pingvinStatus{}
 	hpct := p.Registers[49].Value / p.Registers[49].Multiplier
 	if hpct > 100 {
 		p.Status.HeaterPct = hpct - 100
