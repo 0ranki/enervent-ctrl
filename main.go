@@ -25,7 +25,7 @@ import (
 var static embed.FS
 
 var (
-	version      = "0.1.1"
+	version      = "0.1.2"
 	device       pingvin.Pingvin
 	config       Conf
 	usernamehash [32]byte
@@ -64,6 +64,8 @@ func serve(cert, key *string) {
 	}
 	htmlroot := http.FileServer(http.FS(html))
 	http.HandleFunc("/", authHandler(htmlroot))
+	http.HandleFunc("/coils/", authHandler(http.StripPrefix("/coils/", htmlroot)))
+	http.HandleFunc("/registers/", authHandler(http.StripPrefix("/registers/", htmlroot)))
 	logdst, err := os.OpenFile(os.DevNull, os.O_WRONLY, os.ModeAppend)
 	if err != nil {
 		log.Fatal(err)
