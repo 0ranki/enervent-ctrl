@@ -26,13 +26,14 @@ type pingvinCoil struct {
 
 // unit modbus data
 type Pingvin struct {
-	Coils        []*pingvinCoil
-	Registers    []*pingvinRegister
-	Status       *pingvinStatus
-	buslock      *sync.Mutex
-	handler      *modbus.RTUClientHandler
-	modbusclient modbus.Client
-	Debug        PingvinLogger
+	Coils         []*pingvinCoil
+	Registers     []*pingvinRegister
+	Status        *pingvinStatus
+	buslock       *sync.Mutex
+	handler       *modbus.RTUClientHandler
+	modbusclient  modbus.Client
+	firstReadDone bool
+	Debug         PingvinLogger
 }
 
 // single register data
@@ -310,13 +311,18 @@ func (p *Pingvin) updateRegisters() {
 			if len(results) > 0 {
 				break
 			} else if retries == 4 {
-				log.Printf("ERROR: updateRegisters: max retries reached, giving up. client.ReadHoldingRegisters: ", err)
+				log.Printf("ERROR: updateRegisters: max retries reached, giving up. client.ReadHoldingRegisters: %v", err)
+				log.Printf("ERROR: error occurred when reading registers %d - %d", k, k+r-1)
+				if !p.firstReadDone {
+					panic("FATAL: Error on initial read")
+				}
 				return
 			} else if err != nil {
 				log.Printf("WARNING: updateRegisters: client.ReadHoldingRegisters attempt %d: %s", retries, err)
 			}
 			time.Sleep(200 * time.Millisecond)
 		}
+		p.firstReadDone = true
 		// The values represent 16 bit integers, but modbus works with bytes
 		// Each even byte of the returned []byte is the 8 MSBs of a new 16-bit
 		// value, so for each even byte in the reponse slice we bitshift the byte
