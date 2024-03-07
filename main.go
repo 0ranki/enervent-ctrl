@@ -155,7 +155,7 @@ func initDefaultConfig(confpath string) {
 	}
 }
 
-// Read configuration. CLI flags take presedence over configuration file
+// Read configuration. CLI flags take precedence over configuration file
 func configure() {
 	log.Println("Reading configuration")
 	parseConfigFile()

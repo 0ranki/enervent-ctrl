@@ -66,7 +66,7 @@ has been used.
     	Username for HTTP Basic Authentication (default "pingvin")
 ```
 On first run, the daemon generates `~/.config/enervent-ctrl/configuration.yaml` with default values.
-Configuration options are the same as with CLI flags. CLI flags take precedenence over the config file.
+Configuration options are the same as with CLI flags. CLI flags take precedence over the config file.
 - `serial_address:` Path to RS-485 serial device
 - `port:` TCP port for the REST API to listen on
 - `ssl_certificate:` Path to SSL certificate for HTTPS
