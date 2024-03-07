@@ -25,10 +25,6 @@ has been used.
 
 ### Building
 - clone or download the repo
-- `static/html/index.html` is symlinked to `coils` and `registers`
-  for development purposes, the symlinks need to be dereferenced before
-  building the binary on filesystems that support symlinks
-  - Replace symlinks with copies of the files or use e.g. `tar -h`
 - Build for the correct architecture, e.g. for Linux 32-bit ARM (Rpi Zero W 1):
   ```
   cd /path/to/repo
