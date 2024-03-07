@@ -1,4 +1,6 @@
-#!/bin/bash
+#!/bin/bash -x
+
+pwd
 
 if [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
     echo -e "Usage: $0 [ARCH|-h|--help]"
