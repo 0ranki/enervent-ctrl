@@ -12,12 +12,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
     - name: Setup Go
       uses: actions/setup-go@v4
       with:
         go-version: '1.18.0'
-    - name: Add to release
+    - name: Build release binaries
       uses: goreleaser/goreleaser-action@v5
       with:
         distribution: goreleaser
