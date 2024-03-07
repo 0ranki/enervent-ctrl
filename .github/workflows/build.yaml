@@ -17,8 +17,6 @@ jobs:
       uses: actions/setup-go@v4
       with:
         go-version: '1.18.0'
-    - name: Build x86_64
-      run: ./build.sh
     - name: Add to release
       uses: goreleaser/goreleaser-action@v5
       with:
