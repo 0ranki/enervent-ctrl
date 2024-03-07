@@ -310,11 +310,12 @@ func (p *Pingvin) updateRegisters() {
 			if len(results) > 0 {
 				break
 			} else if retries == 4 {
-				log.Fatal("updateRegisters: client.ReadHoldingRegisters: ", err)
+				log.Printf("ERROR: updateRegisters: max retries reached, giving up. client.ReadHoldingRegisters: ", err)
+				return
 			} else if err != nil {
 				log.Printf("WARNING: updateRegisters: client.ReadHoldingRegisters attempt %d: %s", retries, err)
 			}
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(200 * time.Millisecond)
 		}
 		// The values represent 16 bit integers, but modbus works with bytes
 		// Each even byte of the returned []byte is the 8 MSBs of a new 16-bit
