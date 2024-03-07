@@ -12,6 +12,8 @@ ARCH=${1:-"amd64"}
 
 VERSION=$(grep -e 'version.*=' main.go | awk '{print $3}' | tr -d '"')
 
+[[ ! -d "TMP" ]] && mkdir -p TMP
+
 pushd TMP &> /dev/null || exit 1
 
 tar --exclude ../TMP -ch ../* | tar xf -
