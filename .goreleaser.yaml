@@ -2,10 +2,6 @@ version: 1
 
 before:
   hooks:
-    # You may remove this if you don't use go modules.
-    - go mod tidy
-    # you may remove this if you don't need go generate
-    - go generate ./...
 
 builds:
   - env:
@@ -18,19 +14,14 @@ builds:
       - arm
 
 archives:
-  - format: tar.gz
-    # this name template makes the OS and Arch compatible with the results of `uname`.
+  - format: binary
     name_template: >-
-      {{ .ProjectName }}_
-      {{- title .Os }}_
+      {{ .ProjectName }}-
+      {{- .Os }}-
       {{- if eq .Arch "amd64" }}x86_64
       {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
       {{- if .Arm }}v{{ .Arm }}{{ end }}
-    # use zip for windows archives
-    format_overrides:
-      - goos: windows
-        format: zip
 
 changelog:
   sort: asc
