@@ -112,10 +112,13 @@ WantedBy=default.target
 ### Connecting to the Pingvin unit
 #### RPi/computer running the daemon
 - Connect an RS-485 adapter to the computer you intend to run the daemon on
-  - Tested only on a RPi 4B and Zero W 1 with the Zihatec RS-485 HAT
-  - You may need terminating resistors in your adapter, see documentation of your adapter.
+  - Tested on:
+    - RPi 4B and Zero W 1, generic x86_64 linux machines (Alma Linux 8 & 9, Fedora)
+    - Zihatec RS-485 HAT with the Pis
+    - generic USB-RS485 adapter (checksum errors considerably more often, but nothing critical)
 - Ensure the user you intend to run the daemon as has read/write privileges to the serial device.
-  - No need to run the daemon as root, and it is not recommended
+  - **Not recommended and no need to run as root**
+  - Usually adding the user running the executable to the `dialout` group gives permissions to serial devices
 
 #### Pingvin
 - Shut down the main power of the unit
