@@ -12,4 +12,4 @@ ARCH=${1:-"amd64"}
 
 VERSION=$(grep -e 'version.*=' main.go | awk '{print $3}' | tr -d '"')
 
-CGO_ENABLED=0 GOOS=linux GOARCH="$ARCH" go build -o "../BUILD/enervent-ctrl-${VERSION}.linux-$ARCH" .
+CGO_ENABLED=0 GOOS=linux GOARCH="$ARCH" go build -o "BUILD/enervent-ctrl-${VERSION}.linux-$ARCH" .

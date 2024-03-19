@@ -25,7 +25,7 @@ import (
 var static embed.FS
 
 var (
-	version      = "0.1.2"
+	version      = "0.1.3"
 	device       pingvin.Pingvin
 	config       Conf
 	usernamehash [32]byte
