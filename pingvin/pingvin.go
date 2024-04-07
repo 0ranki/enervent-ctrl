@@ -68,6 +68,8 @@ type pingvinStatus struct {
 	HrcPct       int                 `json:"hrc_pct"`           // Heat recovery turn speed
 	TempSetting  float32             `json:"temp_setting"`      // Requested room temperature
 	FanPct       int                 `json:"fan_pct"`           // Circulation fan setting
+	FanPctIn     int                 `json:"fan_pct_in"`        // Intake fan setting
+	FanPctEx     int                 `json:"fan_pct_ex"`        // Exhaust fan setting
 	Measurements pingvinMeasurements `json:"measurements"`      // Measurements
 	HrcEffIn     int                 `json:"hrc_efficiency_in"` // Calculated HRC efficiency, intake
 	HrcEffEx     int                 `json:"hrc_efficiency_ex"` // Calculated HRC efficiency, extract
@@ -503,6 +505,8 @@ func (p *Pingvin) populateStatus() {
 	}
 	p.Status.TempSetting = float32(p.Registers[135].Value) / float32(p.Registers[135].Multiplier)
 	p.Status.FanPct = p.Registers[774].Value / p.Registers[774].Multiplier
+	p.Status.FanPctIn = p.Registers[3].Value / p.Registers[3].Multiplier
+	p.Status.FanPctEx = p.Registers[4].Value / p.Registers[4].Multiplier
 	p.Status.Measurements.Roomtemp1 = float32(p.Registers[1].Value) / float32(p.Registers[1].Multiplier)
 	p.Status.Measurements.SupplyHeated = float32(p.Registers[8].Value) / float32(p.Registers[8].Multiplier)
 	p.Status.Measurements.SupplyHrc = float32(p.Registers[7].Value) / float32(p.Registers[7].Multiplier)
