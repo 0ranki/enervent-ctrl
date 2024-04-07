@@ -1,12 +1,390 @@
 automation:
-## Max heating
-  - alias: Penguin Max Heating input
+
+  ## FAN / HEATER CONTROL AUTOMATIONS
+  ## THESE WILL AFFECT THE BEHAVIOUR OF THE UNIT
+  - alias: Penguin Auto Heater Disable v0.2.0
+    description: |-
+      Temperature is 0.5 over setpoint and outside temperature over 10
+      -> heater off
+    trigger:
+      - platform: state
+        entity_id:
+          - sensor.penguin_temperature_delta
+        for:
+          hours: 0
+          minutes: 0
+          seconds: 0
+      - platform: numeric_state
+        entity_id: sensor.penguin_temperature_delta
+        above: 0.5
+    condition:
+      - condition: numeric_state
+        entity_id: sensor.penguin_intake_air
+        above: 10
+        value_template: "  {{ states['sensor.penguin_intake_air'].state }}"
+      - condition: state
+        entity_id: sun.sun
+        state: above_horizon
+    action:
+      - delay:
+          hours: 0
+          minutes: 15
+          seconds: 0
+          milliseconds: 0
+      - condition: numeric_state
+        entity_id: sensor.penguin_intake_air
+        above: 10
+        value_template: "{{ states['sensor.penguin_intake_air'].state }}"
+      - service: rest_command.penguin_heater_disable
+        data: { }
+      - service: input_boolean.turn_off
+        data: { }
+        target:
+          entity_id: input_boolean.penguin_after_heater
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 5
+          milliseconds: 0
+      - service: rest_command.penguin_circulation_adaptive
+        data: { }
+    mode: single
+  - alias: Penguin Auto Heater Enable v0.2.0
+    description: |-
+      Temperature below setpoint
+      -> heater on
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.penguin_temperature_delta
+        value_template: "{{ states['sensor.penguin_temperature_delta'].state }}"
+        below: 0
+      - platform: sun
+        event: sunset
+        offset: 0
+        enabled: true
+    condition: [ ]
+    action:
+      - service: rest_command.penguin_heater_enable
+        data: { }
+      - service: input_boolean.turn_on
+        data: { }
+        target:
+          entity_id: input_boolean.penguin_after_heater
+    mode: single
+  - alias: Penguin Auto Heating increase v0.2.0
+    description: |-
+      Temperature 0.2 below setpoint
+      -> circulation fan to manual
+      -> max heating on
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.penguin_temperature_delta
+        below: -0.2
+        value_template: "{{ states['sensor.penguin_temperature_delta'].state }}"
+    condition: [ ]
+    action:
+      - delay:
+          hours: 0
+          minutes: 15
+          seconds: 0
+          milliseconds: 0
+        enabled: true
+      - condition: numeric_state
+        entity_id: sensor.penguin_temperature_delta
+        value_template: "{{ states['sensor.penguin_temperature_delta'].state }}"
+        below: -0.2
+      - if:
+          - condition: state
+            entity_id: input_boolean.penguin_fan_control
+            state: "on"
+        then:
+          - service: rest_command.penguin_max_heating_on
+            data: { }
+      - service: rest_command.penguin_circulation_manual
+        data: { }
+        enabled: false
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 5
+          milliseconds: 0
+      - service: rest_command.penguin_max_heating_on
+        data: { }
+    mode: single
+  - alias: Penguin Auto Heating decrease v0.2.0
+    description: |-
+      Temperature 0.2 over setpoint
+      -> adaptive circulation on (fan should go to minimum allowed)
+      This works sometimes, sometimes doesn't, you may want to disable this
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.penguin_temperature_delta
+        value_template: "{{ states['sensor.penguin_temperature_delta'].state }}"
+        above: 0.2
+    condition:
+      - condition: state
+        entity_id: input_boolean.penguin_fan_control
+        state: "on"
+    action:
+      - delay:
+          hours: 0
+          minutes: 15
+          seconds: 0
+          milliseconds: 0
+        enabled: true
+      - condition: numeric_state
+        entity_id: sensor.penguin_temperature_delta
+        above: 0.2
+        value_template: "{{ states['sensor.penguin_temperature_delta'].state }}"
+      - if:
+          - condition: state
+            entity_id: input_boolean.penguin_fan_control
+            state: "on"
+        then:
+          - service: rest_command.penguin_circulation_adaptive
+            data: { }
+    mode: single
+  - alias: Penguin Auto Max Heating v0.2.0
+    description: |-
+      Temperature 0.3 below setpoint
+      -> Max heat and max circulation (adaptive circulation on, with max heating means max fan setting)
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.penguin_temperature_delta
+        value_template: "{{ states['sensor.penguin_temperature_delta'].state }}"
+        below: -0.3
+    condition: [ ]
+    action:
+      - delay:
+          hours: 0
+          minutes: 15
+          seconds: 0
+          milliseconds: 0
+        enabled: true
+      - condition: numeric_state
+        entity_id: sensor.penguin_temperature_delta
+        below: -0.3
+        value_template: "{{ states['sensor.penguin_temperature_delta'].state }}"
+        enabled: true
+      - service: rest_command.penguin_max_heating_off
+        data: { }
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 5
+          milliseconds: 0
+      - if:
+          - condition: state
+            entity_id: input_boolean.penguin_fan_control
+            state: "on"
+        then:
+          - service: rest_command.penguin_circulation_adaptive
+            data: { }
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 5
+          milliseconds: 0
+      - service: rest_command.penguin_max_heating_on
+        data: { }
+    mode: single
+
+  ## DASHBOARD TOGGLE/SETTING RELATED AUTOMATIONS
+  ## REQUIRED FOR e.g. SETTING THE TEMPERATURE SETPOINT VIA HA AND OTHER ACTIONS
+  - alias: Penguin After Heater Input v0.2.0
+    description: "Actions to take when input_boolean.penguin_after_heater is toggled"
+    trigger:
+      - platform: state
+        entity_id:
+          - input_boolean.penguin_after_heater
+    condition: [ ]
+    action:
+      - if:
+          - condition: state
+            entity_id: input_boolean.penguin_after_heater
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.penguin_after_heater_enabled
+            state: "off"
+        then:
+          - service: rest_command.penguin_heater_enable
+            data: { }
+      - if:
+          - condition: state
+            entity_id: input_boolean.penguin_after_heater
+            state: "off"
+          - condition: state
+            entity_id: binary_sensor.penguin_after_heater_enabled
+            state: "on"
+        then:
+          - service: rest_command.penguin_heater_disable
+            data: { }
+    mode: single
+  - alias: Penguin boost input v0.2.0
+    description: "Actions when toggling input_boolean.penguin_boost"
+    trigger:
+      - platform: state
+        entity_id:
+          - input_boolean.penguin_boost
+    condition: [ ]
+    action:
+      - if:
+          - condition: state
+            entity_id: input_boolean.penguin_boost
+            state: "on"
+        then:
+          - service: rest_command.penguin_boost_on
+            data: { }
+        else:
+          - service: rest_command.penguin_boost_off
+            data: { }
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 5
+          milliseconds: 0
+      - if:
+          - condition: state
+            entity_id: binary_sensor.penguin_boost
+            state: "on"
+        then:
+          - service: input_boolean.turn_on
+            data: { }
+            target:
+              entity_id: input_boolean.penguin_boost
+        else:
+          - service: input_boolean.turn_off
+            data: { }
+            target:
+              entity_id: input_boolean.penguin_boost
+    mode: single
+  - alias: Penguin circulation fan mode sensor v0.2.0
+    description: ""
+    trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.penguin_circulation_adaptive
+    condition: [ ]
+    action:
+      - if:
+          - condition: state
+            entity_id: binary_sensor.penguin_circulation_adaptive
+            state: "on"
+        then:
+          - service: input_boolean.turn_on
+            data: { }
+            target:
+              entity_id: input_boolean.penguin_circulation_fan_adaptive
+        else:
+          - service: input_boolean.turn_off
+            data: { }
+            target:
+              entity_id: input_boolean.penguin_circulation_fan_adaptive
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 2
+          milliseconds: 0
+      - service: homeassistant.update_entity
+        data: { }
+        target:
+          entity_id: sensor.penguin_circulation_fan_pct
+      - service: homeassistant.update_entity
+        data: { }
+        target:
+          entity_id: sensor.penguin_operating_mode
+    mode: single
+  - alias: Penguin circulation fan mode v0.2.0
+    description: ""
+    trigger:
+      - platform: state
+        entity_id:
+          - input_boolean.penguin_circulation_fan_adaptive
+    condition: [ ]
+    action:
+      - if:
+          - condition: state
+            entity_id: input_boolean.penguin_circulation_fan_adaptive
+            state: "on"
+        then:
+          - service: rest_command.penguin_circulation_adaptive
+            data: { }
+        else:
+          - service: rest_command.penguin_circulation_manual
+            data: { }
+    mode: single
+  - alias: Penguin max cooling input v0.2.0
+    description: ""
+    trigger:
+      - platform: state
+        entity_id:
+          - input_boolean.penguin_max_cooling
+    condition: [ ]
+    action:
+      - if:
+          - condition: state
+            entity_id: input_boolean.penguin_max_cooling
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.penguin_max_cooling
+            state: "off"
+          - condition: numeric_state
+            entity_id: sensor.penguin_room_temperature_1
+            above: input_number.penguin_temperature_setting_helper
+        then:
+          - service: rest_command.penguin_max_cooling_on
+            data: { }
+        else: [ ]
+      - if:
+          - condition: state
+            entity_id: input_boolean.penguin_max_cooling
+            state: "off"
+        then:
+          - service: rest_command.penguin_max_cooling_off
+            data: { }
+      - if:
+          - condition: numeric_state
+            entity_id: sensor.penguin_room_temperature_1
+            below: input_number.penguin_temperature_setting_helper
+          - condition: state
+            entity_id: input_boolean.penguin_max_cooling
+            state: "on"
+        then:
+          - service: input_boolean.turn_off
+            data: { }
+            target:
+              entity_id: input_boolean.penguin_max_cooling
+    mode: single
+  - alias: Penguin max cooling sensor v0.2.0
+    description: ""
+    trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.penguin_max_cooling
+    condition: [ ]
+    action:
+      - if:
+          - condition: state
+            entity_id: binary_sensor.penguin_max_cooling
+            state: "on"
+        then:
+          - service: input_boolean.turn_on
+            data: { }
+            target:
+              entity_id: input_boolean.penguin_max_cooling
+        else:
+          - service: input_boolean.turn_off
+            data: { }
+            target:
+              entity_id: input_boolean.penguin_max_cooling
+    mode: single
+  - alias: Penguin Max Heating input v0.2.0
     description: ""
     trigger:
       - platform: state
         entity_id:
           - input_boolean.penguin_max_heating
-    condition: []
+    condition: [ ]
     action:
       - if:
           - condition: state
@@ -20,15 +398,15 @@ automation:
             below: input_number.penguin_temperature_setting_helper
         then:
           - service: rest_command.penguin_max_heating_on
-            data: {}
-        else: []
+            data: { }
+        else: [ ]
       - if:
           - condition: state
             entity_id: input_boolean.penguin_max_heating
             state: "off"
         then:
           - service: rest_command.penguin_max_heating_off
-            data: {}
+            data: { }
       - if:
           - condition: numeric_state
             entity_id: sensor.penguin_room_temperature_1
@@ -38,17 +416,17 @@ automation:
             state: "on"
         then:
           - service: input_boolean.turn_off
-            data: {}
+            data: { }
             target:
               entity_id: input_boolean.penguin_max_heating
     mode: single
-  - alias: Penguin Max Heating sensor
+  - alias: Penguin Max Heating sensor v0.2.0
     description: ""
     trigger:
       - platform: state
         entity_id:
           - binary_sensor.penguin_max_heating
-    condition: []
+    condition: [ ]
     action:
       - if:
           - condition: state
@@ -56,184 +434,141 @@ automation:
             state: "on"
         then:
           - service: input_boolean.turn_on
-            data: {}
+            data: { }
             target:
               entity_id: input_boolean.penguin_max_heating
         else:
           - service: input_boolean.turn_off
-            data: {}
+            data: { }
             target:
               entity_id: input_boolean.penguin_max_heating
     mode: single
-
-
-## Max cooling
-  - alias: Penguin max cooling sensor
+  - alias: Penguin overpressure input v0.2.0
     description: ""
     trigger:
       - platform: state
         entity_id:
-          - binary_sensor.penguin_max_cooling
-    condition: []
+          - input_boolean.penguin_overpressure
+    condition: [ ]
     action:
       - if:
           - condition: state
-            entity_id: binary_sensor.penguin_max_cooling
+            entity_id: input_boolean.penguin_overpressure
+            state: "on"
+        then:
+          - service: rest_command.penguin_overpressure_on
+            data: { }
+        else:
+          - service: rest_command.penguin_overpressure_off
+            data: { }
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 5
+          milliseconds: 0
+      - if:
+          - condition: state
+            entity_id: binary_sensor.penguin_overpressure
             state: "on"
         then:
           - service: input_boolean.turn_on
-            data: {}
+            data: { }
             target:
-              entity_id: input_boolean.penguin_max_cooling
+              entity_id: input_boolean.penguin_overpressure
         else:
           - service: input_boolean.turn_off
-            data: {}
+            data: { }
             target:
-              entity_id: input_boolean.penguin_max_cooling
+              entity_id: input_boolean.penguin_overpressure
     mode: single
-- alias: Penguin max cooling input
-  description: ""
-  trigger:
-    - platform: state
-      entity_id:
-        - input_boolean.penguin_max_cooling
-  condition: []
-  action:
-    - if:
-        - condition: state
-          entity_id: input_boolean.penguin_max_cooling
-          state: "on"
-        - condition: state
-          entity_id: binary_sensor.penguin_max_cooling
-          state: "off"
-        - condition: numeric_state
-          entity_id: sensor.penguin_room_temperature_1
-          above: input_number.penguin_temperature_setting_helper
-      then:
-        - service: rest_command.penguin_max_cooling_on
-          data: {}
-      else: []
-    - if:
-        - condition: state
-          entity_id: input_boolean.penguin_max_cooling
-          state: "off"
-      then:
-        - service: rest_command.penguin_max_cooling_off
-          data: {}
-    - if:
-        - condition: numeric_state
-          entity_id: sensor.penguin_room_temperature_1
-          below: input_number.penguin_temperature_setting_helper
-        - condition: state
-          entity_id: input_boolean.penguin_max_cooling
-          state: "on"
-      then:
-        - service: input_boolean.turn_off
-          data: {}
-          target:
-            entity_id: input_boolean.penguin_max_cooling
-  mode: single
-
-
-## Circulation fan mode
-  - alias: Penguin circulation fan mode
+  - alias: Penguin SNC input v0.2.0
     description: ""
     trigger:
       - platform: state
         entity_id:
-          - input_boolean.penguin_circulation_fan_adaptive
-    condition: []
+          - input_boolean.penguin_snc
+    condition: [ ]
     action:
       - if:
           - condition: state
-            entity_id: input_boolean.penguin_circulation_fan_adaptive
+            entity_id: input_boolean.penguin_snc
             state: "on"
         then:
-          - service: rest_command.penguin_circulation_adaptive
-            data: {}
-      - if:
-          - condition: state
-            entity_id: input_boolean.penguin_circulation_fan_adaptive
-            state: "off"
-        then:
-          - service: rest_command.penguin_circulation_manual
-            data: {}
+          - service: rest_command.penguin_snc_enable
+            data: { }
+        else:
+          - service: rest_command.penguin_snc_disable
+            data: { }
     mode: single
-- alias: Penguin circulation fan mode sensor
-  description: ""
-  trigger:
-    - platform: state
-      entity_id:
-        - binary_sensor.penguin_circulation_adaptive
-  condition: []
-  action:
-    - if:
-        - condition: state
-          entity_id: binary_sensor.penguin_circulation_adaptive
-          state: "on"
-      then:
-        - service: input_boolean.turn_on
-          data: {}
-          target:
-            entity_id: input_boolean.penguin_circulation_fan_adaptive
-      else:
-        - service: input_boolean.turn_off
-          data: {}
-          target:
-            entity_id: input_boolean.penguin_circulation_fan_adaptive
-  mode: single
-
-
-## Target temperature setting automations
-- alias: Penguin temperature down
-  description: ""
-  trigger:
-    - platform: state
-      entity_id:
-        - input_button.penguin_temperature_down
-  condition: []
-  action:
-    - service: rest_command.penguin_temperature_down
-      data: {}
-    - service: input_number.decrement
-      data: {}
-      target:
-        entity_id: input_number.penguin_temperature_setting_helper
-    - service: homeassistant.update_entity
-      data: {}
-      target:
-        entity_id: sensor.penguin_temperature_setting
-  mode: single
-- alias: Penguin Temperature setting updater
-  description: ""
-  trigger:
-    - platform: state
-      entity_id:
-        - sensor.penguin_temperature_setting
-  condition: []
-  action:
-    - service: input_number.set_value
-      data:
-        value: "{{ states('sensor.penguin_temperature_setting') }}"
-      target:
-        entity_id: input_number.penguin_temperature_setting_helper
-  mode: single
-- alias: Penguin temperature up
-  description: ""
-  trigger:
-    - platform: state
-      entity_id:
-        - input_button.penguin_temperature_up
-  condition: []
-  action:
-    - service: rest_command.penguin_temperature_up
-      data: {}
-    - service: input_number.increment
-      data: {}
-      target:
-        entity_id: input_number.penguin_temperature_setting_helper
-    - service: homeassistant.update_entity
-      data: {}
-      target:
-        entity_id: sensor.penguin_temperature_setting
-  mode: single
+  - alias: Penguin temperature down v0.2.0
+    description: ""
+    trigger:
+      - platform: state
+        entity_id:
+          - input_button.penguin_temperature_down
+    condition: [ ]
+    action:
+      - service: input_number.decrement
+        data: { }
+        target:
+          entity_id: input_number.penguin_temperature_setting_helper
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 3
+          milliseconds: 0
+      - service: rest_command.penguin_temperature_set
+        data: { }
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 1
+          milliseconds: 0
+      - service: homeassistant.update_entity
+        data: { }
+        target:
+          entity_id: sensor.penguin_temperature_setting
+    mode: restart
+  - alias: Penguin temperature up v0.2.0
+    description: ""
+    trigger:
+      - platform: state
+        entity_id:
+          - input_button.penguin_temperature_up
+    condition: [ ]
+    action:
+      - service: input_number.increment
+        data: { }
+        target:
+          entity_id: input_number.penguin_temperature_setting_helper
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 3
+          milliseconds: 0
+      - service: rest_command.penguin_temperature_set
+        data: { }
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 1
+          milliseconds: 0
+      - service: homeassistant.update_entity
+        data: { }
+        target:
+          entity_id: sensor.penguin_temperature_setting
+    mode: restart
+  - alias: Penguin Temperature setting updater v0.2.0
+    description: ""
+    trigger:
+      - platform: state
+        entity_id:
+          - sensor.penguin_temperature_setting
+    condition: [ ]
+    action:
+      - service: input_number.set_value
+        data:
+          value: "{{ states('sensor.penguin_temperature_setting') }}"
+        target:
+          entity_id: input_number.penguin_temperature_setting_helper
+    mode: single

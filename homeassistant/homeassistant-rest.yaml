@@ -28,6 +28,14 @@ rest:
         value_template: "{{ value_json['fan_pct'] }}"
         unit_of_measurement: "%"
         icon: mdi:fan
+      - name: "Penguin intake fan pct"
+        value_template: "{{ value_json['fan_pct_in'] }}"
+        unit_of_measurement: "%"
+        icon: mdi:fan
+      - name: "Penguin exhaust fan pct"
+        value_template: "{{ value_json['fan_pct_ex'] }}"
+        unit_of_measurement: "%"
+        icon: mdi:fan
       - name: "Penguin HRC efficiency intake"
         value_template: "{{ value_json['hrc_efficiency_in'] }}"
         unit_of_measurement: "%"
@@ -36,10 +44,6 @@ rest:
         value_template: "{{ value_json['hrc_efficiency_ex'] }}"
         unit_of_measurement: "%"
         icon: mdi:recycle
-      - name: "Penguin days until service"
-        value_template: "{{ value_json['days_until_service'] }}"
-        unit_of_measurement: "pv"
-        icon: mdi:calendar
       - name: "Penguin supply air"
         value_template: "{{ value_json['measurements']['supply_heated'] }}"
         unit_of_measurement: "°C"
@@ -98,6 +102,9 @@ rest:
         icon: mdi:fireplace
       - name: "Penguin after heater enabled"
         value_template: "{{ value_json['coils'][54]['value'] }}"
+        icon: mdi:heating-coil
+      - name: "Penguin summer night cooling enabled"
+        value_template: "{{ value_json['coils'][12]['value'] }}"
         icon: mdi:heating-coil
 
 template:

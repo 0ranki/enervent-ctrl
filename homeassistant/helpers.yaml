@@ -9,7 +9,7 @@ input_boolean:
     name: Penguin Overpressure
     icon: mdi:fireplace
   penguin_boost:
-    name: Penguin Overpressure
+    name: Penguin Boost
     icon: mdi:fan-plus
   penguin_max_cooling:
     name: Penguin Max Cooling
@@ -17,6 +17,12 @@ input_boolean:
   penguin_after_heater:
     name: Penguin After Heater
     icon: mdi:heating-coil
+  penguin_snc:
+    name: Penguin Summer Night Cooling
+    icon: mdi:snowflake-thermometer
+  penguin_fan_control:
+    name: Penguin Fan Control
+    icon: mdi:fan-alert
 input_button:
   penguin_temperature_up:
     name: Penguin temperature up
@@ -30,3 +36,4 @@ input_number:
     min: 20
     max: 30
     unit_of_measurement: "°C"
+    step: 0.5
