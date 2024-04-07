@@ -1,5 +1,6 @@
 views:
-  - title: Penguin
+  - title: Pingvin
+    icon: mdi:penguin
     cards:
       - type: vertical-stack
         cards:
@@ -24,6 +25,11 @@ views:
               - entity: input_boolean.penguin_after_heater
                 name: Heating allowed
                 secondary_info: last-changed
+              - entity: input_boolean.penguin_snc
+                icon: mdi:snowflake-thermometer
+                name: Summer Night Cooling
+              - entity: input_boolean.penguin_fan_control
+                name: Circulation Fan Control
             state_color: true
           - square: false
             columns: 4
@@ -122,8 +128,6 @@ views:
             name: Outside air 24h avg
           - entity: sensor.penguin_supply_air_hrc
             name: Intake after HRC
-          - entity: sensor.penguin_supply_air_humidity
-            name: Intake humidity
           - entity: sensor.penguin_supply_air
             name: Supply air
           - entity: sensor.penguin_return_water
@@ -141,5 +145,9 @@ views:
             name: HRC Efficiency intake
           - entity: sensor.penguin_hrc_efficiency_extract
             name: HRC Efficiency extract
+          - entity: sensor.penguin_intake_fan_pct
+            name: Intake fan speed
+          - entity: sensor.penguin_exhaust_fan_pct
+            name: Exhaust fan speed
         title: Measurements
 title: Heating & Ventilation
