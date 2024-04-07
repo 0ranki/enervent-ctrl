@@ -145,6 +145,14 @@ should be enough length in the wires to move the lid with the switch connected o
 
 - There are so many variations for HASS configs, that definite instructions are hard to do.
 - All the YAMLs are intended to be copy-pasted to `configuration.yaml` (or files included to configuration.yaml)
+  - Contents of `homeassistant/automations.yaml` to automations.yaml in your HA `config/` folder
+  - Contents of `homeassistant/homeassistant-rest.yaml` and `homeassistant/helpers.yaml` to configuration.yaml in your HA `config/` folder
+    - Replace IP_ADDRESS with the correct IP address, for example with sed: `sed -i 's/IP_ADDRESS/192.168.4.5/g' configuration.yaml`
+    - If you set a different port for enervent-ctrl, use `sed -i 's/IP_ADDRESS:8888/192.168.4.5:9999/g' configuration.yaml`
+  - Dashboard:
+    - create an empty dashboard
+    - opening the YAML editor in the HA Lovelace UI
+    - copy the contents from `homeassistant/dashboard-en/fi.yaml` to the editor as-is.
 - Change the IP address, port, username and password according to your configuration
 - Restart Home Assistant (A full reload doesn't seem to be enough for all REST integration features to update)
 
