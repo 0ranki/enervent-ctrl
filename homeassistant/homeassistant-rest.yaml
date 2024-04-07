@@ -132,13 +132,13 @@ rest_command:
     username: pingvin
     password: enervent
   penguin_boost_on:
-    url: https://192.168.0.210:8888/api/v1/coils/10/1
+    url: https://IP_ADDRESS:8888/api/v1/coils/10/1
     method: POST
     verify_ssl: false
     username: pingvin
     password: enervent
   penguin_boost_off:
-    url: https://192.168.0.210:8888/api/v1/coils/10/0
+    url: https://IP_ADDRESS:8888/api/v1/coils/10/0
     method: POST
     verify_ssl: false
     username: pingvin
@@ -165,37 +165,37 @@ rest_command:
     username: pingvin
     password: enervent
   penguin_max_cooling_on:
-    url: https://192.168.0.210:8888/api/v1/coils/7/1
+    url: https://IP_ADDRESS:8888/api/v1/coils/7/1
     method: POST
     verify_ssl: false
     username: pingvin
     password: enervent
   penguin_max_cooling_off:
-    url: https://192.168.0.210:8888/api/v1/coils/7/0
+    url: https://IP_ADDRESS:8888/api/v1/coils/7/0
     method: POST
     verify_ssl: false
     username: pingvin
     password: enervent
   penguin_temperature_up:
-    url: https://192.168.0.210:8888/api/v1/temperature/up
+    url: https://IP_ADDRESS:8888/api/v1/temperature/up
     method: POST
     verify_ssl: false
     username: pingvin
     password: enervent
   penguin_temperature_down:
-    url: https://192.168.0.210:8888/api/v1/temperature/down
+    url: https://IP_ADDRESS:8888/api/v1/temperature/down
     method: POST
     verify_ssl: false
     username: pingvin
     password: enervent
   penguin_heater_enabled:
-    url: https://192.168.0.210:8888/api/v1/coils/54/1
+    url: https://IP_ADDRESS:8888/api/v1/coils/54/1
     method: POST
     verify_ssl: false
     username: pingvin
     password: enervent
   penguin_heater_disabled:
-    url: https://192.168.0.210:8888/api/v1/coils/54/0
+    url: https://IP_ADDRESS:8888/api/v1/coils/54/0
     method: POST
     verify_ssl: false
     username: pingvin
