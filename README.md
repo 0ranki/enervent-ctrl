@@ -1,7 +1,5 @@
 # Enervent-control
 
-### Upstream URL: [https://git.oranki.net/jarno/enervent-ctrl](https://git.oranki.net/jarno/enervent-ctrl)
-
 External control of an Enervent Pingvin
 Kotilämpö residential heating/ventilation
 unit via RS485 bus using the Modbus protocol.
@@ -161,3 +159,6 @@ Work is part of my Bachelor's Thesis at Oulu University
 of Applied Sciences.
 
 Pingvin and Kotilämpö are registered trademarks of Enervent Zehnder Oy.
+
+<sup><sub>This repo is used to build the binaries and container images with Github Actions.
+Mirrored from https://git.oranki.net/jarno/enervent-ctrl</sub></sup>
