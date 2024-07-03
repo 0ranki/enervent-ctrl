@@ -160,5 +160,5 @@ of Applied Sciences.
 
 Pingvin and Kotilämpö are registered trademarks of Enervent Zehnder Oy.
 
-<sup><sub>This repo is used to build the binaries and container images with Github Actions.
+<sup><sub>Github is used to build the binaries and container images with Github Actions.
 Mirrored from https://git.oranki.net/jarno/enervent-ctrl</sub></sup>
